@@ -14,7 +14,7 @@ def date_format(s):
 NCID_SERVER     = 'dsl'     # router with NCID server
 NCID_PORT       = 3333      # configured NCID port
 BUFFER_SIZE     = 4096      # max read chunk size
-SOCKET_TIMEOUT  = 1.0       # in seconds
+SOCKET_TIMEOUT  = 1.0       # receive timeout in seconds
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print "[DEBUG] connecting to NCID server '%s:%s'..." % (NCID_SERVER, NCID_PORT)
