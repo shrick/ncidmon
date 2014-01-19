@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
 import socket
-import datetime
+from datetime import datetime
 
 def get_sortable_date_time(date, time):
-    return "{}-{}-{} {}:{}".format(
-        date[4:8], date[2:4], date[0:2], 
-        time[0:2], time[2:4]
+    return datetime.strptime('%s %s' % (date, time),
+        '%d%m%Y %H%M'
+    ).strftime(
+        '%Y-%m-%d %H:%M'
     )
     
 def time_format(s):
-    return "{}:{}".format(s[0:2], s[2:4])
+    return datetime.strptime(s, '%H%M').strftime('%H:%M')
 
-def date_format(s):    
-    return "{}.{}.{}".format(s[0:2], s[2:4], s[4:8])
+def date_format(s):
+    return datetime.strptime(s, '%d%m%Y').strftime('%d.%m.%Y')
 
 
 NCID_SERVER     = '192.168.2.1' # name or IP of NCID server
@@ -25,7 +26,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print "[DEBUG] connecting to NCID server '%s:%s'..." % (NCID_SERVER, NCID_PORT)
 s.connect((NCID_SERVER, NCID_PORT))
 print "[DEBUG] broadcasting myself..."
-s.send("MSG: ncid.py client connected at %s" % (datetime.datetime.today()))
+s.send("MSG: ncid.py client connected at %s" % (datetime.today()))
 s.settimeout(SOCKET_TIMEOUT)
 server_text = ""
 
