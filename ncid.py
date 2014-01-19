@@ -3,6 +3,14 @@
 import socket
 from datetime import datetime
 
+
+NCID_SERVER     = '192.168.2.1' # name or IP of NCID server
+NCID_PORT       = 3333          # configured NCID port
+BUFFER_SIZE     = 4096          # max read chunk size
+SOCKET_TIMEOUT  = 1.0           # receive timeout in seconds
+CLIENT_MESSAGE  = "ncid.py client connected at %s" % (datetime.today())
+
+
 def get_sortable_date_time(date, time):
     return datetime.strptime('%s %s' % (date, time),
         '%d%m%Y %H%M'
@@ -17,20 +25,15 @@ def date_format(s):
     return datetime.strptime(s, '%d%m%Y').strftime('%d.%m.%Y')
 
 
-NCID_SERVER     = '192.168.2.1' # name or IP of NCID server
-NCID_PORT       = 3333          # configured NCID port
-BUFFER_SIZE     = 4096          # max read chunk size
-SOCKET_TIMEOUT  = 1.0           # receive timeout in seconds
-
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print "[DEBUG] connecting to NCID server '%s:%s'..." % (NCID_SERVER, NCID_PORT)
 s.connect((NCID_SERVER, NCID_PORT))
 print "[DEBUG] broadcasting myself..."
-s.send("MSG: ncid.py client connected at %s" % (datetime.today()))
+s.send("MSG: " + CLIENT_MESSAGE)
 s.settimeout(SOCKET_TIMEOUT)
 server_text = ""
 
-print "[DEBUG] reading responses with timeout of %ss..." % (SOCKET_TIMEOUT)
+print "[DEBUG] reading responses with timeout of %s seconds..." % (SOCKET_TIMEOUT)
 try:
     data = s.recv(BUFFER_SIZE)
     while data:
