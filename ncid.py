@@ -3,7 +3,12 @@
 import socket
 import datetime
 
-
+def get_sortable_date_time(date, time):
+    return "{}-{}-{} {}:{}".format(
+        date[4:8], date[2:4], date[0:2], 
+        time[0:2], time[2:4]
+    )
+    
 def time_format(s):
     return "{}:{}".format(s[0:2], s[2:4])
 
@@ -38,18 +43,22 @@ print "[DEBUG] formatted response follows..."
 print
 # collect log entries, output other lines
 server_lines = server_text.split('\r\n')
-log_entries = []
+log_entries = {}
 for line in server_lines:
     if line.startswith('CIDLOG:'):
         # log entry
         log_list = line.split('*')[1:]  # throw away 'CIDLOG: '
         log_dict = dict(zip(*[iter(log_list)] * 2))
-        log_entries.append(log_dict)
+        date = log_dict.get('DATE', 'yyyymmdd')
+        time = log_dict.get('TIME', 'hhmm')
+        key = get_sortable_date_time(date, time)
+        log_entries.update({key: log_dict})
     elif line != "":
         print line  # other than log entry
 
 # formatted output of log entries
-for index, entry in enumerate(log_entries):
+for index, key in enumerate(sorted(log_entries)):
+    entry = log_entries[key]
     print "[{:02}]  {}, {}: {}".format(
         index + 1,
         date_format(entry.get('DATE', 'yyyymmdd')), 
