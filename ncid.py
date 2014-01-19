@@ -17,23 +17,24 @@ BUFFER_SIZE     = 4096      # max read chunk size
 SOCKET_TIMEOUT  = 1.0       # in seconds
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print "connecting to NCID server %s:%s..." % (NCID_SERVER, NCID_PORT)
+print "[DEBUG] connecting to NCID server '%s:%s'..." % (NCID_SERVER, NCID_PORT)
 s.connect((NCID_SERVER, NCID_PORT))
-print "broadcasting myself..."
+print "[DEBUG] broadcasting myself..."
 s.send("MSG: ncid.py client connected at %s" % (datetime.datetime.today()))
 s.settimeout(SOCKET_TIMEOUT)
 server_text = ""
 
-print "reading responses with timeout of %ss..." % (SOCKET_TIMEOUT)
+print "[DEBUG] reading responses with timeout of %ss..." % (SOCKET_TIMEOUT)
 try:
     data = s.recv(BUFFER_SIZE)
     while data:
         server_text += data
         data = s.recv(BUFFER_SIZE)
 except IOError as e:
-    print "exception caught:", e
+    print "[DEBUG] exception caught:", e
     s.close()
 
+print "[DEBUG] formatted response follows..."
 print
 # collect log entries, output other lines
 server_lines = server_text.split('\r\n')
