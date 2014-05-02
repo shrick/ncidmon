@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf8 -*-
 
 import sys
 from datetime import datetime
@@ -11,7 +12,10 @@ CONNECT_TIMEOUT     = 5.0           # connect timeout in seconds
 BUFFER_SIZE         = 4096          # max read chunk size
 RECEIVE_TIMEOUT     = 1.0           # receive timeout in seconds
 NCID_CLIENT_NAME    = 'ncid.py'
-NUMBER_LOOKUP_URL   = r'http://mobil.dasoertliche.de/search?what=%s'
+NUMBER_LOOKUP_PAGES = (
+    (r'Das Örtliche', r'http://mobil.dasoertliche.de/search?what=%s'),
+    (r'Klicktel', r'http://www.klicktel.de/rueckwaertssuche/%s'),
+)
 NOTIFICATION_ICON   = r'phone'
 
 notifications_disabled = True
@@ -69,18 +73,18 @@ def notify_call(title, items, priority=None, expires=None):
     if notifications_disabled:
         return
     
-    # enable lookup link only if number is not suppressed
-    pretty_number = get_pretty_number(items)
+    body_number = '<b>%s</b>' % (get_pretty_number(items))
+    # add lookup links if number is not suppressed
     number = get_number(items)
     if number.isdigit():
-        body_number = '<a href="%s">%s</a>' % (
-            NUMBER_LOOKUP_URL % (number), pretty_number
+        SEP = '\n'
+        body_number += SEP + SEP.join(
+            '<a href="%s">%s</a>' % (url % (number), name)
+                for name, url in NUMBER_LOOKUP_PAGES
         )
-    else:
-        body_number = pretty_number
     
     # format message body
-    body = '<i>%s, %s</i>\n\n<b>%s</b>' % (
+    body = '%s, %s\n\n%s' % (
         get_pretty_date(items), get_pretty_time(items), body_number
     )
     
