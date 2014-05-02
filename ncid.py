@@ -11,7 +11,8 @@ CONNECT_TIMEOUT     = 5.0           # connect timeout in seconds
 BUFFER_SIZE         = 4096          # max read chunk size
 RECEIVE_TIMEOUT     = 1.0           # receive timeout in seconds
 NCID_CLIENT_NAME    = 'ncid.py'
-NUMBER_LOOKUP_URL   = 'http://mobil.dasoertliche.de/search?what=%s'
+NUMBER_LOOKUP_URL   = r'http://mobil.dasoertliche.de/search?what=%s'
+NOTIFICATION_ICON   = r'phone'
 
 notifications_disabled = True
 
@@ -84,10 +85,7 @@ def notify_call(title, items, priority=None, expires=None):
     )
     
     # create notification
-    message = pynotify.Notification(
-        title, body,
-        'internet-group-chat' # in favour of a more specific icon
-    )
+    message = pynotify.Notification(title, body, NOTIFICATION_ICON)
     
     # set notification properties
     message.set_category('im.received') # in favour of a more specific category
