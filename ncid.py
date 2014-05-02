@@ -4,6 +4,7 @@ import sys
 from datetime import datetime
 import socket
 
+
 NCID_SERVER         = '192.168.2.1' # name or IP of NCID server
 NCID_PORT           = 3333          # configured NCID port
 CONNECT_TIMEOUT     = 5.0           # connect timeout in seconds
@@ -11,6 +12,8 @@ BUFFER_SIZE         = 4096          # max read chunk size
 RECEIVE_TIMEOUT     = 1.0           # receive timeout in seconds
 NCID_CLIENT_NAME    = 'ncid.py'
 NUMBER_LOOKUP_URL   = 'http://mobil.dasoertliche.de/search?what=%s'
+
+notifications_disabled = True
 
 
 def get_sortable_entry_key(items):
