@@ -54,7 +54,7 @@ for line in server_lines:
 
 # formatted sorted output of log entries
 for index, entry in enumerate(sorted(log_entries, key=get_sortable_entry_key)):
-    print "[{:02}]  {}, {}: {}".format(
+    print "[{:02}]  {} {} - {}".format(
         index + 1,
         datetime.strptime(entry['DATE'], '%d%m%Y').strftime('%d.%m.%Y') ,     
         datetime.strptime(entry['TIME'], '%H%M').strftime('%H:%M'),
