@@ -6,8 +6,9 @@ import socket
 
 NCID_SERVER         = '192.168.2.1' # name or IP of NCID server
 NCID_PORT           = 3333          # configured NCID port
+CONNECT_TIMEOUT     = 5.0           # connect timeout in seconds
 BUFFER_SIZE         = 4096          # max read chunk size
-SOCKET_TIMEOUT      = 1.0           # receive timeout in seconds
+RECEIVE_TIMEOUT     = 1.0           # receive timeout in seconds
 NCID_CLIENT_NAME    = 'ncid.py'
 NUMBER_LOOKUP_URL   = 'http://mobil.dasoertliche.de/search?what=%s'
 
@@ -123,13 +124,18 @@ if __name__ == "__main__":
         pynotify.init(NCID_CLIENT_NAME)
     
     # requesting server
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print "[DEBUG] connecting to NCID server '%s:%s'..." % (NCID_SERVER, NCID_PORT)
-    s.connect((NCID_SERVER, NCID_PORT))
-    print "[DEBUG] broadcasting myself..."
-    s.send("MSG: %s client connected at %s" % (NCID_CLIENT_NAME, datetime.today()))
-    print "[DEBUG] reading responses with timeout of %s seconds..." % (SOCKET_TIMEOUT)
-    s.settimeout(SOCKET_TIMEOUT)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(CONNECT_TIMEOUT)
+        print "[DEBUG] connecting to NCID server '%s:%s'..." % (NCID_SERVER, NCID_PORT)
+        s.connect((NCID_SERVER, NCID_PORT))
+        print "[DEBUG] broadcasting myself..."
+        s.send("MSG: %s client connected at %s" % (NCID_CLIENT_NAME, datetime.today()))
+    except IOError as e:
+        print "[DEBUG] I/O error:", e
+        sys.exit(1)    
+    print "[DEBUG] reading responses with timeout of %s seconds..." % (RECEIVE_TIMEOUT)
+    s.settimeout(RECEIVE_TIMEOUT)
     server_text = ""
     try:
         data = s.recv(BUFFER_SIZE)
@@ -137,7 +143,7 @@ if __name__ == "__main__":
             server_text += data
             data = s.recv(BUFFER_SIZE)
     except IOError as e:
-        print "[DEBUG] exception:", e
+        print "[DEBUG] response timeout"
         s.close()
     
     # collect log entries, output other lines
