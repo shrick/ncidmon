@@ -29,13 +29,22 @@ def get_pretty_number(items):
     number = get_number(items)
     if number:
         if number.isdigit():
-            number = (
-                number[:4] + ' / ' + 
-                ' '.join(a+b for a,b in zip(*[iter(number[4:])] * 2))
-            )
-    else:
-        number = 'Anonym'
-    return number
+            CODE_LENGTH = 4
+            code = number[:CODE_LENGTH]
+            subscriber = number[CODE_LENGTH:]
+            
+            # reformat subscriber part:
+            # 34567     ->     345 67
+            # 234567    ->   23 45 67
+            # 1234567   ->  123 45 67
+            overlap = subscriber[:len(subscriber) % 2]
+            subscriber = overlap + ' '.join(
+                a + b for a, b in zip(*[reversed(subscriber)] * 2)
+            )[::-1]
+            
+            return code + ' / ' + subscriber
+        return number
+    return 'Anonym'
 
 
 def get_pretty_date(items):
