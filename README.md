@@ -14,13 +14,16 @@ incoming calls.
 
 Optional arguments:
 
-    --listen
+*--listen*
+
 Listen for incoming calls. Can be used for running in background, e.g. automatically started in user session.
 
-    --disable-notifications
+*--disable-notifications*
+
 Show no notifcations for recent call and incoming calls. To be used for interactive checks of recent calls.
 
-    -h, --help
+*-h, --help*
+
 Show usage and exit.
 
 **DEPENDENCIES**
@@ -34,3 +37,5 @@ Show usage and exit.
 - [ ] reorganize (split into multiple source file)
 - [ ] command line options for server address
 - [ ] connection timeout
+- [ ] handle connection failures (-> retries with final notification) even if not in listening mode
+- [ ] maybe two protocol implementations for simple request and continuous listening mode
