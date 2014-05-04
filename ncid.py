@@ -1,33 +1,52 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-import sys
+# apt-get python-notify2  or  --disable-notifications
+# apt-get twisted-twisted  or  apt-get python-twisted-core
+from twisted.protocols.basic import LineReceiver
+from twisted.internet.protocol import ReconnectingClientFactory
+from twisted.internet import reactor
 from datetime import datetime
-import socket
+import sys
 
-
+DEBUG               = False         # print debug output?
 NCID_SERVER         = '192.168.2.1' # name or IP of NCID server
 NCID_PORT           = 3333          # configured NCID port
-CONNECT_TIMEOUT     = 5.0           # connect timeout in seconds
-BUFFER_SIZE         = 4096          # max read chunk size
-RECEIVE_TIMEOUT     = 1.0           # receive timeout in seconds
-NCID_CLIENT_NAME    = 'ncid.py'
-NUMBER_LOOKUP_PAGES = (
+CONNECT_TIMEOUT     = 5.0           # connect timeout in seconds (currently unused)
+NCID_CLIENT_NAME    = 'ncid.py'     # name of this client for broadcasts
+NOTIFICATION_ICON   = r'phone'      # name of icon in notification windows
+NUMBER_LOOKUP_PAGES = (             # (name, url) tuples for number lookup
     (r'Das Örtliche', r'http://mobil.dasoertliche.de/search?what=%s'),
     (r'Klicktel', r'http://www.klicktel.de/rueckwaertssuche/%s'),
 )
-NOTIFICATION_ICON   = r'phone'
 
-notifications_disabled = True
+notifications_enabled = False   # to reduce dependencies if used as module 
+
+
+### MISC FUNCTIONS #############################################################
+
+
+def print_usage_and_exit(name):
+    print 'Usage:', name, "[--listen] [--disable-notifications]"
+    sys.exit(0)
+
+
+def dprint(*args):
+    if DEBUG:
+        print '[DEBUG]', ' '.join(str(a) for a in args)
+
+
+### LOG UTILITY FUNCTIONS ######################################################
 
 
 def get_sortable_entry_key(items):
     return datetime.strptime(
-        '%s %s' % (items['DATE'], items['TIME']),
+        '{} {}'.format(items['DATE'], items['TIME']),
         '%d%m%Y %H%M'
     ).strftime(
         '%Y-%m-%d %H:%M'
     )
+
 
 def get_number(items):
     return items.get('NMBR')
@@ -35,6 +54,7 @@ def get_number(items):
 
 def get_pretty_number(items):
     '''simple formatting for common german numbers'''
+    
     number = get_number(items)
     if number:
         if number.isdigit():
@@ -63,6 +83,18 @@ def get_pretty_date(items):
 def get_pretty_time(items):
     return datetime.strptime(items['TIME'], '%H%M').strftime('%H:%M')
 
+def get_pretty_cid(items):
+    '''formatted CID or CIDLOG entry'''
+    
+    return '{}, {} - {}'.format(
+        get_pretty_date(items),
+        get_pretty_time(items),
+        get_pretty_number(items)
+    )
+
+
+### NOTIFICATION FUNCTIONS #####################################################
+
 
 # Notification:
 # https://developer.gnome.org/notification-spec/
@@ -70,7 +102,7 @@ def get_pretty_time(items):
 # http://mamu.backmeister.name/programmierung-und-skripting/pynotify-python-skript-zeigt-notify-osd-bubbles/
 # http://www.cmdln.org/2008/12/18/simple-network-popup-with-python-and-libnotify/
 def notify_call(title, items, priority=None, expires=None):
-    if notifications_disabled:
+    if not notifications_enabled:
         return
     
     body_number = '<b>%s</b>' % (get_pretty_number(items))
@@ -84,7 +116,7 @@ def notify_call(title, items, priority=None, expires=None):
         )
     
     # format message body
-    body = '%s, %s\n\n%s' % (
+    body = '{}, {}\n\n{}'.format(
         get_pretty_date(items), get_pretty_time(items), body_number
     )
     
@@ -94,13 +126,13 @@ def notify_call(title, items, priority=None, expires=None):
     # set notification properties
     message.set_category('im.received') # in favour of a more specific category
     message.set_urgency({
-        "low":      pynotify.URGENCY_LOW,
-        "default":  pynotify.URGENCY_NORMAL,
-        "high":     pynotify.URGENCY_CRITICAL,
+        'low':      pynotify.URGENCY_LOW,
+        'default':  pynotify.URGENCY_NORMAL,
+        'high':     pynotify.URGENCY_CRITICAL,
     }.get(priority, pynotify.URGENCY_NORMAL))
     message.set_timeout({
-        "default":  pynotify.EXPIRES_DEFAULT,
-        "never":    pynotify.EXPIRES_NEVER,
+        'default':  pynotify.EXPIRES_DEFAULT,
+        'never':    pynotify.EXPIRES_NEVER,
     }.get(expires, pynotify.EXPIRES_DEFAULT))
    
     # show notification
@@ -108,54 +140,69 @@ def notify_call(title, items, priority=None, expires=None):
 
 
 def notify_current_incoming_call(items):
-    notify_call('Incoming call...', items, priority="high", expires="never")
+    notify_call('Incoming call...', items, priority='high', expires='never')
 
 
 def notify_recent_incoming_call(items):
-    notify_call('Recent incoming call', items, priority="low")
+    notify_call('Recent incoming call', items, priority='low')
 
 
-if __name__ == "__main__":
+### TWISTED NETWORK CLASSES ####################################################
+
+
+class NCIDClient(LineReceiver):
+    '''Simple NCID client handling recceived lines'''
     
-    # command line processing
-    notifications_disabled = False
-    for arg in sys.argv:
-        if arg == "--disable-notifications":
-            notifications_disabled = True
     
-    # init notification system
-    if not notifications_disabled:
-        import pynotify
-        pynotify.init(NCID_CLIENT_NAME)
+    _cidlog_entries = []
+    _log_dumped = False
     
-    # requesting server
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(CONNECT_TIMEOUT)
-        print "[DEBUG] connecting to NCID server '%s:%s'..." % (NCID_SERVER, NCID_PORT)
-        s.connect((NCID_SERVER, NCID_PORT))
-        print "[DEBUG] broadcasting myself..."
-        s.send("MSG: %s client connected at %s" % (NCID_CLIENT_NAME, datetime.today()))
-    except IOError as e:
-        print "[DEBUG] I/O error:", e
-        sys.exit(1)    
-    print "[DEBUG] reading responses with timeout of %s seconds..." % (RECEIVE_TIMEOUT)
-    s.settimeout(RECEIVE_TIMEOUT)
-    server_text = ""
-    try:
-        data = s.recv(BUFFER_SIZE)
-        while data:
-            server_text += data
-            data = s.recv(BUFFER_SIZE)
-    except IOError as e:
-        print "[DEBUG] response timeout"
-        s.close()
     
-    # collect log entries, output other lines
-    print "[DEBUG] formatted response follows..."
-    server_lines = server_text.split('\r\n')
-    log_entries = []
-    for line in server_lines:
+    def connectionMade(self):        
+        self.sendAnnouncing()
+        
+        # output recent calls after some time the logs should be received
+        # (if not already done before)
+        def dump_if_not_already_done():
+            if not self._log_dumped:
+                dprint('timeout, dumping log...')
+                self.outputRecentCalls()
+                self._log_dumped = True
+        reactor.callLater(3, dump_if_not_already_done)
+    
+    
+    def sendAnnouncing(self):
+        dprint('broadcasting myself...')
+        self._my_announcing = 'MSG: {} client connected at {}'.format(
+            NCID_CLIENT_NAME, datetime.now()
+        )
+        self.sendLine(self._my_announcing)
+    
+    
+    def lineReceived(self, line):
+        '''
+        process receiver lines from server
+        
+        check/handle CID* entries
+        output anything else
+        dump received call log if own broadcast was received
+        '''
+        
+        if not self._handleCIDAndCIDLOG(line):
+            # anything else
+            print '>>>', line
+            
+            if not self._log_dumped and line == self._my_announcing:
+                # seen my own broadcast (MSG: ...), dumping log
+                dprint('seen own announcing, dumping log...')
+                self.outputRecentCalls()
+                self._log_dumped = True
+                self.factory.receivedFullLog()
+
+
+    def _handleCIDAndCIDLOG(self, line):
+        '''collect CIDLOGs, notify CIDs,'''
+        
         if line.startswith('CID'):
             data = line.split('*')
             label = data.pop(0).strip(': ');
@@ -163,31 +210,125 @@ if __name__ == "__main__":
             
             if label == 'CIDLOG':
                 # record log entry
-                log_entries.append(items)
+                self._cidlog_entries.append(items)
+                return True
+            
             elif label == 'CID':
                 # notify incoming call
                 notify_current_incoming_call(items)
-            else:
-                # e.g. CIDINFO
-                print line
-        elif line != "":
-            print line  # other than CID* entry
+                # store as normal log entry
+                self._cidlog_entries.append(items)
+                # print on console
+                print '(**) ' + get_pretty_cid(items)
+                return True
+            
+        # not handled
+        return False 
     
-    # process CIDLOG entries
-    if log_entries:
-        # formatted sorted output of log entries
-        sorted_log_entries = sorted(log_entries, key=get_sortable_entry_key)
-        for index, items in enumerate(sorted_log_entries):
-            print "[{:02}]  {}, {} - {}".format(
-                index + 1,
-                get_pretty_date(items),
-                get_pretty_time(items),
-                get_pretty_number(items)
+    def outputRecentCalls(self):
+        if self._cidlog_entries:
+            # sort entries
+            sorted_entries = sorted(
+                self._cidlog_entries, key=get_sortable_entry_key
             )
+            
+            # print to console
+            dprint('formatted log follows...')
+            for index, items in enumerate(sorted_entries):
+                print '({:02}) {}'.format(index + 1, get_pretty_cid(items))
+            
+            # notify recent incoming call
+            notify_recent_incoming_call(sorted_entries[-1])
         
-        # notify recent incoming call
-        items = sorted_log_entries[-1]
-        notify_recent_incoming_call(items)
+
+class NCIDClientFactory(ReconnectingClientFactory):
+    ''' NCID client factory with reconnect feature'''
     
-    print "[DEBUG] done."
+    
+    def __init__(self, listen):
+        self._listen = listen
+        
+        
+    def startedConnecting(self, connector):
+        addr = connector.getDestination()
+        dprint(
+            "connecting to NCID server '{}:{}'...".format(addr.host, addr.port)
+        )
+    
+    
+    def buildProtocol(self, addr):
+        dprint('connected')
+        
+        if self._listen:
+            dprint('resetting reconnection delay...')
+            self.resetDelay()
+        else:
+            dprint('terminating in a few seconds...')
+            reactor.callLater(5, reactor.stop)
+        
+        dprint('spawning NCID client instance...')
+        protocol = NCIDClient()
+        protocol.factory = self
+        return protocol
+    
+    
+    def receivedFullLog(self):
+        '''To get notified by client, so we may shutdown'''
+        if not self._listen:
+            reactor.stop()
+    
+    
+    def clientConnectionLost(self, connector, reason):
+        if self._listen:
+            dprint('lost connection:', reason)
+            ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
+    
+    
+    def clientConnectionFailed(self, connector, reason):
+        if self._listen:
+            dprint('connection failed:', reason)
+            ReconnectingClientFactory.clientConnectionFailed(
+                self, connector, reason
+            )
+
+
+### MAIN #######################################################################
+
+
+if __name__ == "__main__":
+    
+    # Features:
+    # - notify recent and incoming calls
+    #   -> default: enabled
+    #   -> change: --disable-notifications
+    notifications_enabled = True
+    # - listen for incoming connections
+    #   -> default: disabled
+    #   -> change: --listen
+    listen_enabled = False   
+    
+    # command line processing
+    for arg in sys.argv[1:]:
+        if arg in ('-h', '--help'):
+            print_usage_and_exit(sys.argv[0])
+        if arg == '--disable-notifications':
+            notifications_enabled = False
+        elif arg == '--listen':
+            listen_enabled = True
+        else:
+            print 'unknown argument:', arg
+            print_usage_and_exit(sys.argv[0])
+    
+    # init notification system
+    if notifications_enabled:
+        import pynotify
+        pynotify.init(NCID_CLIENT_NAME)
+        
+    # run the client
+    reactor.connectTCP(
+        NCID_SERVER, NCID_PORT, NCIDClientFactory(listen_enabled)
+    )
+    reactor.run()
+  
+    dprint('done.')
 
