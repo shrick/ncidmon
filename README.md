@@ -31,6 +31,10 @@ Show usage and exit.
 - twisted (https://twistedmatrix.com/trac/)
 - pynotify (only if notifications are not disabled per command line)
 
+**COMPATIBILITY**
+
+- developed and tested with Python 2.7
+
 **TODO**
 - [x] permanent connection to notify incoming calls instantly
 - [ ] getopt command line parsing

@@ -16,8 +16,9 @@ CONNECT_TIMEOUT     = 5.0           # connect timeout in seconds (currently unus
 NCID_CLIENT_NAME    = 'ncid.py'     # name of this client for broadcasts
 NOTIFICATION_ICON   = r'phone'      # name of icon in notification windows
 NUMBER_LOOKUP_PAGES = (             # (name, url) tuples for number lookup
-    (r'Das Örtliche', r'http://mobil.dasoertliche.de/search?what=%s'),
-    (r'Klicktel', r'http://www.klicktel.de/rueckwaertssuche/%s'),
+    # replace search number in loopkup URL by '{number}' 
+    (r'Das Örtliche', r'http://mobil.dasoertliche.de/search?what={number}'),
+    (r'Klicktel', r'http://www.klicktel.de/rueckwaertssuche/{number}'),
 )
 
 notifications_enabled = False   # to reduce dependencies if used as module 
@@ -41,8 +42,7 @@ def dprint(*args):
 
 def get_sortable_entry_key(items):
     return datetime.strptime(
-        '{} {}'.format(items['DATE'], items['TIME']),
-        '%d%m%Y %H%M'
+        '{DATE} {TIME}'.format(**items), '%d%m%Y %H%M'
     ).strftime(
         '%Y-%m-%d %H:%M'
     )
@@ -86,7 +86,7 @@ def get_pretty_time(items):
 def get_pretty_cid(items):
     '''formatted CID or CIDLOG entry'''
     
-    return '{}, {} - {}'.format(
+    return '{0}, {1} - {2}'.format(
         get_pretty_date(items),
         get_pretty_time(items),
         get_pretty_number(items)
@@ -105,18 +105,18 @@ def notify_call(title, items, priority=None, expires=None):
     if not notifications_enabled:
         return
     
-    body_number = '<b>%s</b>' % (get_pretty_number(items))
+    body_number = '<b>{0}</b>'.format(get_pretty_number(items))
     # add lookup links if number is not suppressed
     number = get_number(items)
     if number.isdigit():
         SEP = '\n'
         body_number += SEP + SEP.join(
-            '<a href="%s">%s</a>' % (url % (number), name)
+            '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
                 for name, url in NUMBER_LOOKUP_PAGES
         )
     
     # format message body
-    body = '{}, {}\n\n{}'.format(
+    body = '{0}, {1}\n\n{2}'.format(
         get_pretty_date(items), get_pretty_time(items), body_number
     )
     
@@ -173,7 +173,7 @@ class NCIDClient(LineReceiver):
     
     def sendAnnouncing(self):
         dprint('broadcasting myself...')
-        self._my_announcing = 'MSG: {} client connected at {}'.format(
+        self._my_announcing = 'MSG: {0} client connected at {1}'.format(
             NCID_CLIENT_NAME, datetime.now()
         )
         self.sendLine(self._my_announcing)
@@ -181,7 +181,7 @@ class NCIDClient(LineReceiver):
     
     def lineReceived(self, line):
         '''
-        process receiver lines from server
+        process received lines from server
         
         check/handle CID* entries
         output anything else
@@ -235,7 +235,7 @@ class NCIDClient(LineReceiver):
             # print to console
             dprint('formatted log follows...')
             for index, items in enumerate(sorted_entries):
-                print '({:02}) {}'.format(index + 1, get_pretty_cid(items))
+                print '({0:02}) {1}'.format(index + 1, get_pretty_cid(items))
             
             # notify recent incoming call
             notify_recent_incoming_call(sorted_entries[-1])
@@ -250,9 +250,10 @@ class NCIDClientFactory(ReconnectingClientFactory):
         
         
     def startedConnecting(self, connector):
-        addr = connector.getDestination()
         dprint(
-            "connecting to NCID server '{}:{}'...".format(addr.host, addr.port)
+            "connecting to NCID server '{0.host}:{0.port}'...".format(
+                connector.getDestination()
+            )
         )
     
     
