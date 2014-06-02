@@ -21,7 +21,8 @@ NUMBER_LOOKUP_PAGES = (             # (name, url) tuples for number lookup
     (r'Klicktel', r'http://www.klicktel.de/rueckwaertssuche/{number}'),
 )
 
-notifications_enabled = False   # to reduce dependencies if used as module 
+notifications_enabled = False   # to reduce dependencies if used as module
+addresses = {}
 
 # http://de.wikipedia.org/wiki/Telefonvorwahl_%28Deutschland%29
 # http://www.123sig.de/Kommunikation/Vorwahlen/vorwahlen.html
@@ -83,13 +84,17 @@ CODE_LENGTHS = {
 
 
 def print_usage_and_exit(name):
-    print 'Usage:', name, "[--listen] [--disable-notifications]"
+    print 'usage:', name, "[--listen] [--disable-notifications]"
     sys.exit(0)
 
 
 def dprint(*args):
     if DEBUG:
         print '[DEBUG]', ' '.join(str(a) for a in args)
+
+
+def resolve_number(number):
+    return addresses.get(str(number))
 
 
 ### LOG UTILITY FUNCTIONS ######################################################
@@ -108,6 +113,8 @@ def get_number(items):
 
 
 def split_code_from_subscriber(number):
+    '''try longest prefix match'''
+    
     for index in xrange(len(number)):
         code_length = CODE_LENGTHS.get(number[:-index]) 
         if code_length is not None:
@@ -150,11 +157,19 @@ def get_pretty_time(items):
 def get_pretty_cid(items):
     '''formatted CID or CIDLOG entry'''
     
-    return '{0}, {1} - {2}'.format(
+    # date, time and number
+    line = '{0}, {1} - {2}'.format(
         get_pretty_date(items),
         get_pretty_time(items),
         get_pretty_number(items)
     )
+    
+    # add name from adressbook
+    name = resolve_number(get_number(items))
+    if name:
+        line += ' (' + name + ')'
+    
+    return line
 
 
 ### NOTIFICATION FUNCTIONS #####################################################
@@ -169,16 +184,24 @@ def notify_call(title, items, priority=None, expires=None):
     if not notifications_enabled:
         return
     
+    # phone number
     body_number = '<b>{0}</b>'.format(get_pretty_number(items))
-    # add lookup links if number is not suppressed
+    
     number = get_number(items)
+    
+    # add name from adressbook
+    name = resolve_number(number)
+    if name:
+        body_number += '\n<i>' + name + '</i>\n'
+    
+    # add lookup links if number is not suppressed
     if number.isdigit():
         SEP = '\n'
         body_number += SEP + SEP.join(
             '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
                 for name, url in NUMBER_LOOKUP_PAGES
         )
-    
+   
     # format message body
     body = '{0}, {1}\n\n{2}'.format(
         get_pretty_date(items), get_pretty_time(items), body_number
@@ -388,7 +411,24 @@ if __name__ == "__main__":
     if notifications_enabled:
         import pynotify
         pynotify.init(NCID_CLIENT_NAME)
+    
+    # import mapping of numbers to names
+    try:
+        import addressbook
+        # # Python file with simple dictionary
+        # # -*- coding: utf8 -*-
+        #
+        # directory = {
+        #     '0123456789': 'John Doo',
+        #     '0132435465': 'Mary Jane
+        # }
         
+        addresses = addressbook.directory
+        dprint('addressbook found')
+    except:
+        dprint('no addressbook found')
+        pass
+    
     # run the client
     reactor.connectTCP(
         NCID_SERVER, NCID_PORT, NCIDClientFactory(listen_enabled)
