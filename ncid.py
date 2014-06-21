@@ -8,6 +8,7 @@ from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet import reactor
 from datetime import datetime
 import sys
+import string
 
 DEBUG               = False         # print debug output?
 NCID_SERVER         = '192.168.2.1' # name or IP of NCID server
@@ -91,6 +92,20 @@ def print_usage_and_exit(name):
 def dprint(*args):
     if DEBUG:
         print '[DEBUG]', ' '.join(str(a) for a in args)
+
+
+def normalize_adressbook(adressbook):
+    # create identity table
+    all = string.maketrans('','')
+    
+    # make translation table w/o digits
+    no_digits = all.translate(all, string.digits)
+    
+    # re-build adressbook with normalized numbers
+    return {
+        key.translate(None, no_digits): value
+            for (key, value) in adressbook.items()
+    }
 
 
 def resolve_number(number):
@@ -419,15 +434,15 @@ if __name__ == "__main__":
         # # -*- coding: utf8 -*-
         #
         # directory = {
-        #     '0123456789': 'John Doo',
-        #     '0132435465': 'Mary Jane
+        #     '0123 / 45 67 - 89': 'John Doo',
+        #     '0132435465': 'Mary Jane'
         # }
         
-        addresses = addressbook.directory
+        # normalize telephone numbers in adressbook and assign to local name
+        addresses = normalize_adressbook(addressbook.directory)
         dprint('addressbook found')
     except:
         dprint('no addressbook found')
-        pass
     
     # run the client
     reactor.connectTCP(
