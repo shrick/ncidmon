@@ -260,7 +260,7 @@ class NCIDClient(LineReceiver):
     _log_dumped = False
     
     
-    def connectionMade(self):        
+    def connectionMade(self):
         self.sendAnnouncing()
         
         # output recent calls after some time the logs should be received
@@ -270,7 +270,7 @@ class NCIDClient(LineReceiver):
                 dprint('timeout, dumping log...')
                 self.outputRecentCalls()
                 self._log_dumped = True
-        reactor.callLater(3, dump_if_not_already_done)
+        self.factory.reactor.callLater(3, dump_if_not_already_done)
     
     
     def sendAnnouncing(self):
@@ -347,7 +347,8 @@ class NCIDClientFactory(ReconnectingClientFactory):
     ''' NCID client factory with reconnect feature'''
     
     
-    def __init__(self, listen):
+    def __init__(self, the_reactor, listen):
+        self.reactor = the_reactor
         self._listen = listen
         
         
@@ -367,7 +368,7 @@ class NCIDClientFactory(ReconnectingClientFactory):
             self.resetDelay()
         else:
             dprint('terminating in a few seconds...')
-            reactor.callLater(5, reactor.stop)
+            self.reactor.callLater(5, self.reactor.stop)
         
         dprint('spawning NCID client instance...')
         protocol = NCIDClient()
@@ -378,7 +379,7 @@ class NCIDClientFactory(ReconnectingClientFactory):
     def receivedFullLog(self):
         '''To get notified by client, so we may shutdown'''
         if not self._listen:
-            reactor.stop()
+            self.reactor.stop()
     
     
     def clientConnectionLost(self, connector, reason):
@@ -446,7 +447,7 @@ if __name__ == "__main__":
     
     # run the client
     reactor.connectTCP(
-        NCID_SERVER, NCID_PORT, NCIDClientFactory(listen_enabled)
+        NCID_SERVER, NCID_PORT, NCIDClientFactory(reactor, listen_enabled)
     )
     reactor.run()
   
