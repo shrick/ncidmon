@@ -9,12 +9,12 @@ from datetime import datetime
 from twisted.protocols.basic import LineReceiver
 
 # application
-from misc import *
+import misc
+import notifications
 
 
 class NCIDClient(LineReceiver):
     '''Simple NCID client handling recceived lines'''
-    
     
     _cidlog_entries = []
     _log_dumped = False
@@ -27,16 +27,17 @@ class NCIDClient(LineReceiver):
         # (if not already done before)
         def dump_if_not_already_done():
             if not self._log_dumped:
-                dprint('timeout, dumping log...')
+                misc.dprint('timeout, dumping log...')
                 self.outputRecentCalls()
                 self._log_dumped = True
+        
         self.factory.reactor.callLater(3, dump_if_not_already_done)
     
     
     def sendAnnouncing(self):
-        dprint('broadcasting myself...')
+        misc.dprint('broadcasting myself...')
         self._my_announcing = 'MSG: {0} client connected at {1}'.format(
-            CONFIG['NCID_CLIENT_NAME'], datetime.now()
+            misc.CONFIG['NCID_CLIENT_NAME'], datetime.now()
         )
         self.sendLine(self._my_announcing)
     
@@ -56,7 +57,7 @@ class NCIDClient(LineReceiver):
             
             if not self._log_dumped and line == self._my_announcing:
                 # seen my own broadcast (MSG: ...), dumping log
-                dprint('seen own announcing, dumping log...')
+                misc.dprint('seen own announcing, dumping log...')
                 self.outputRecentCalls()
                 self._log_dumped = True
                 self.factory.receivedFullLog()
@@ -77,11 +78,11 @@ class NCIDClient(LineReceiver):
             
             elif label == 'CID':
                 # notify incoming call
-                notify_current_incoming_call(items)
+                notifications.notify_current_incoming_call(items)
                 # store as normal log entry
                 self._cidlog_entries.append(items)
                 # print on console
-                print '(**) ' + get_pretty_cid(items)
+                print '(**) ' + misc.get_pretty_cid(items)
                 return True
             
         # not handled
@@ -91,14 +92,14 @@ class NCIDClient(LineReceiver):
         if self._cidlog_entries:
             # sort entries
             sorted_entries = sorted(
-                self._cidlog_entries, key=get_sortable_entry_key
+                self._cidlog_entries, key=misc.get_sortable_entry_key
             )
             
             # print to console
-            dprint('formatted log follows...')
+            misc.dprint('formatted log follows...')
             for index, items in enumerate(sorted_entries):
-                print '({0:02}) {1}'.format(index + 1, get_pretty_cid(items))
+                print '({0:02}) {1}'.format(index + 1, misc.get_pretty_cid(items))
             
             # notify recent incoming call
-            notify_recent_incoming_call(sorted_entries[-1])
+            notifications.notify_recent_incoming_call(sorted_entries[-1])
 

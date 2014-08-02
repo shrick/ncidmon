@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 
 # system
+import string
 from datetime import datetime
 
 
@@ -19,7 +20,6 @@ CONFIG = {
         (r'Das Örtliche', r'http://mobil.dasoertliche.de/search?what={number}'),
         (r'Klicktel', r'http://www.klicktel.de/rueckwaertssuche/{number}'),
     ),
-    'notifications_enabled': False,         # to reduce dependencies if used as module
 }
 
 
@@ -184,71 +184,4 @@ def get_pretty_cid(items):
         line += ' (' + name + ')'
     
     return line
-
-
-### NOTIFICATION FUNCTIONS #####################################################
-
-# Notification:
-# https://developer.gnome.org/notification-spec/
-# https://wiki.ubuntu.com/NotificationDevelopmentGuidelines
-# http://mamu.backmeister.name/programmierung-und-skripting/pynotify-python-skript-zeigt-notify-osd-bubbles/
-# http://www.cmdln.org/2008/12/18/simple-network-popup-with-python-and-libnotify/
-def notify_call(title, items, priority=None, expires=None):
-    if not CONFIG['notifications_enabled']:
-        return
-    
-    if CONFIG['notifications_enabled'] != "initialized":
-        import pynotify
-        pynotify.init(CONFIG['NCID_CLIENT_NAME'])
-        CONFIG['notifications_enabled'] = "initialized"
-    
-    # phone number
-    body_number = '<b>{0}</b>'.format(get_pretty_number(items))
-    
-    number = get_number(items)
-    
-    # add name from adressbook
-    name = resolve_number(number)
-    if name:
-        body_number += '\n<i>' + name + '</i>\n'
-    
-    # add lookup links if number is not suppressed
-    if number.isdigit():
-        SEP = '\n'
-        body_number += SEP + SEP.join(
-            '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
-                for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
-        )
-   
-    # format message body
-    body = '{0}, {1}\n\n{2}'.format(
-        get_pretty_date(items), get_pretty_time(items), body_number
-    )
-    
-    # create notification
-    message = pynotify.Notification(title, body, CONFIG['NOTIFICATION_ICON'])
-    
-    # set notification properties
-    message.set_category('im.received') # in favour of a more specific category
-    message.set_urgency({
-        'low':      pynotify.URGENCY_LOW,
-        'default':  pynotify.URGENCY_NORMAL,
-        'high':     pynotify.URGENCY_CRITICAL,
-    }.get(priority, pynotify.URGENCY_NORMAL))
-    message.set_timeout({
-        'default':  pynotify.EXPIRES_DEFAULT,
-        'never':    pynotify.EXPIRES_NEVER,
-    }.get(expires, pynotify.EXPIRES_DEFAULT))
-   
-    # show notification
-    message.show()
-
-
-def notify_current_incoming_call(items):
-    notify_call('Incoming call...', items, priority='high', expires='never')
-
-
-def notify_recent_incoming_call(items):
-    notify_call('Recent incoming call', items, priority='low')
-
 

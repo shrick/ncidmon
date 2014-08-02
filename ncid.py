@@ -3,7 +3,6 @@
 
 # system
 import sys
-import string
 
 # apt-get python-notify2  or  --disable-notifications
 # apt-get twisted-twisted  or  apt-get python-twisted-core
@@ -11,17 +10,19 @@ from twisted.internet import reactor
 
 # application
 from NCIDClientFactory import NCIDClientFactory
-from misc import *
+import misc
+import notifications
 
 
 if __name__ == "__main__":
-    CONFIG['DEBUG'] = True
+    misc.CONFIG['DEBUG'] = True
     
     # Features:
     # - notify recent and incoming calls
     #   -> default: enabled
     #   -> change: --disable-notifications
-    CONFIG['notifications_enabled'] = True
+    notifications_enabled = True
+    
     # - listen for incoming connections
     #   -> default: disabled
     #   -> change: --listen
@@ -30,14 +31,17 @@ if __name__ == "__main__":
     # command line processing
     for arg in sys.argv[1:]:
         if arg in ('-h', '--help'):
-            print_usage_and_exit(sys.argv[0])
+            misc.print_usage_and_exit(sys.argv[0])
         if arg == '--disable-notifications':
-            CONFIG['notifications_enabled'] = False
+            notifications_enabled = False
         elif arg == '--listen':
             listen_enabled = True
         else:
             print 'unknown argument:', arg
-            print_usage_and_exit(sys.argv[0])
+            misc.print_usage_and_exit(sys.argv[0])
+    
+    # configure notifications
+    notifications.enable_notifcations(notifications_enabled)
     
     # import mapping of numbers to names
     try:
@@ -50,19 +54,19 @@ if __name__ == "__main__":
         #     '0132435465': 'Mary Jane'
         # }
         
-        # normalize telephone numbers in adressbook and assign to local name
-        addresses = normalize_adressbook(addressbook.directory)
-        dprint('addressbook found')
+        # store normalized telephone numbers of numbers found in adressbook
+        misc.addresses.update(misc.normalize_adressbook(addressbook.directory))
+        misc.dprint('addressbook found')
     except:
-        dprint('no addressbook found')
+        misc.dprint('no addressbook found')
     
     # run the client
     reactor.connectTCP(
-        CONFIG['NCID_SERVER'],
-        CONFIG['NCID_PORT'],
+        misc.CONFIG['NCID_SERVER'],
+        misc.CONFIG['NCID_PORT'],
         NCIDClientFactory(reactor, listen_enabled)
     )
     reactor.run()
   
-    dprint('done.')
+    misc.dprint('done.')
 
