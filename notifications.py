@@ -18,7 +18,9 @@ def enable_notifcations(enable):
             pynotify = __import__('pynotify')
         if previous_status is None:
             # not yet initialized
-            pynotify.init(CONFIG['NCID_CLIENT_NAME'])
+            if not pynotify.init(CONFIG['NCID_CLIENT_NAME']):
+                # disable on errors
+                pynotify = None
     elif pynotify:
         pynotify = False
 
@@ -31,46 +33,24 @@ def notify_call(title, cid_entry, priority=None, expires=None):
     if not pynotify:
         return
     
-    # phone number
-    body_number = '<b>{0}</b>'.format(cid_entry.get_pretty_number())
-    
-    # add name from adressbook
-    name = cid_entry.resolve_number()
-    if name:
-        body_number += '\n<i>' + name + '</i>\n'
-    
-    # add lookup links if number is not suppressed
-    number = cid_entry.get_number()
-    if number.isdigit():
-        SEP = '\n'
-        body_number += SEP + SEP.join(
-            '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
-                for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
-        )
-   
     # format message body
     body = '{0}, {1}\n\n{2}'.format(
-        cid_entry.get_pretty_date(),
-        cid_entry.get_pretty_time(),
-        body_number
+        cid_entry.get_pretty_date(),        # 0: date
+        cid_entry.get_pretty_time(),        # 1: time
+        '\n'.join([                         # 2:
+            _build_body_phone(cid_entry),   # - phone number
+            _build_body_name(cid_entry),    # - name from adressbook if found
+            _build_body_links(cid_entry)    # - lookup links if number not suppressed
+        ])
     )
     
     # create notification
     message = pynotify.Notification(
-        title, body, CONFIG['NOTIFICATION_ICON']
+        title, body, CONFIG['NOTIFICATION_ICON'] 
     )
     
     # set notification properties
-    message.set_category('im.received') # in favour of a more specific category
-    message.set_urgency({
-        'low':      pynotify.URGENCY_LOW,
-        'default':  pynotify.URGENCY_NORMAL,
-        'high':     pynotify.URGENCY_CRITICAL,
-    }.get(priority, pynotify.URGENCY_NORMAL))
-    message.set_timeout({
-        'default':  pynotify.EXPIRES_DEFAULT,
-        'never':    pynotify.EXPIRES_NEVER,
-    }.get(expires, pynotify.EXPIRES_DEFAULT))
+    _set_message_properties(message, priority, expires)
    
     # show notification
     message.show()
@@ -82,3 +62,40 @@ def notify_current_incoming_call(items):
 
 def notify_recent_incoming_call(items):
     notify_call('Recent incoming call', items, priority='low')
+
+
+def _build_body_phone(cid_entry):
+    return '<b>{0}</b>'.format(cid_entry.get_pretty_number())
+
+
+def _build_body_name(cid_entry):
+    name = cid_entry.resolve_number()
+    if name:
+        return '<i>' + name + '</i>'
+    return ""
+
+
+def _build_body_links(cid_entry):
+    number = cid_entry.get_number()
+    if number.isdigit():
+        return '\n' + '\n'.join(
+            '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
+                for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
+        )
+    return ""
+
+
+def _set_message_properties(message, priority, expires):
+    message.set_category('im.received') # in favour of a more specific category
+    
+    message.set_urgency({
+        'low':      pynotify.URGENCY_LOW,
+        'default':  pynotify.URGENCY_NORMAL,
+        'high':     pynotify.URGENCY_CRITICAL,
+    }.get(priority, pynotify.URGENCY_NORMAL))
+    
+    message.set_timeout({
+        'default':  pynotify.EXPIRES_DEFAULT,
+        'never':    pynotify.EXPIRES_NEVER,
+    }.get(expires, pynotify.EXPIRES_DEFAULT))
+
