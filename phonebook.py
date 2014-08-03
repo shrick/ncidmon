@@ -2,10 +2,10 @@
 # -*- coding: utf8 -*-
 
 # system
-import string
+from string import maketrans, digits
 
 # application
-import misc
+from misc import dprint
 
 phonebook = {}
 
@@ -13,12 +13,13 @@ phonebook = {}
 def resolve_number(number):
     return phonebook.get(str(number))
 
+
 def _get_normalized_phonebook(directory):
     # create identity table
-    all = string.maketrans('','')
+    all = maketrans('','')
     
     # make translation table w/o digits
-    no_digits = all.translate(all, string.digits)
+    no_digits = all.translate(all, digits)
     
     # return re-built directory with normalized numbers
     return {
@@ -40,7 +41,7 @@ try:
     
     # store normalized telephone numbers of numbers found in adressbook
     phonebook.update(_get_normalized_phonebook(subscribers.directory))
-    misc.dprint('phonebook found')
+    dprint('subscribers found')
 except:
-    misc.dprint('no phonebook found')
+    dprint('no subscribers found')
 

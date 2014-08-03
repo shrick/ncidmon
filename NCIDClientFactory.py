@@ -7,7 +7,7 @@ from twisted.internet.protocol import ReconnectingClientFactory
 
 # application
 from NCIDClient import NCIDClient
-import misc
+from misc import dprint
 
 
 class NCIDClientFactory(ReconnectingClientFactory):
@@ -20,7 +20,7 @@ class NCIDClientFactory(ReconnectingClientFactory):
         
         
     def startedConnecting(self, connector):
-        misc.dprint(
+        dprint(
             "connecting to NCID server '{0.host}:{0.port}'...".format(
                 connector.getDestination()
             )
@@ -28,16 +28,16 @@ class NCIDClientFactory(ReconnectingClientFactory):
     
     
     def buildProtocol(self, addr):
-        misc.dprint('connected')
+        dprint('connected')
         
         if self._listen:
-            misc.dprint('resetting reconnection delay...')
+            dprint('resetting reconnection delay...')
             self.resetDelay()
         else:
-            misc.dprint('terminating in a few seconds...')
+            dprint('terminating in a few seconds...')
             self.reactor.callLater(5, self.reactor.stop)
         
-        misc.dprint('spawning NCID client instance...')
+        dprint('spawning NCID client instance...')
         protocol = NCIDClient()
         protocol.factory = self
         return protocol
@@ -51,13 +51,14 @@ class NCIDClientFactory(ReconnectingClientFactory):
     
     def clientConnectionLost(self, connector, reason):
         if self._listen:
-            misc.dprint('lost connection:', reason)
+            dprint('lost connection:', reason)
             ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
     
     
     def clientConnectionFailed(self, connector, reason):
         if self._listen:
-            misc.dprint('connection failed:', reason)
+            dprint('connection failed:', reason)
             ReconnectingClientFactory.clientConnectionFailed(
                 self, connector, reason
             )
+

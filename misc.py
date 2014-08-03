@@ -2,9 +2,8 @@
 # -*- coding: utf8 -*-
 
 # system
-import string
-from datetime import datetime
-import math
+from math import floor, log10
+
 
 CONFIG = {
     'DEBUG'              : False,           # print debug output?
@@ -28,7 +27,7 @@ def dprint(*args):
         print '[DEBUG]', ' '.join(str(a) for a in args)
 
 def get_digits_count(value):    
-    return int(math.floor(math.log10(abs(int(value)))) + 1)
+    return int(floor(log10(abs(int(value)))) + 1)
 
 
 

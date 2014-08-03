@@ -33,13 +33,14 @@ Show usage and exit.
 
 **COMPATIBILITY**
 
-- developed and tested with Python 2.7 (last version check returned 2.7.6)
+- developed with Python 2.7 (last version check returned 2.7.6)
 
 **TODO**
 - [x] permanent connection to notify incoming calls instantly
 - [ ] limit log entries output on console by configurable time span
 - [ ] getopt command line parsing
-- [ ] reorganize (split into multiple source file)
+- [x] reorganize (split into multiple source file)
+- [ ] restructure (file and folder hierarchy)
 - [ ] command line options for server address
 - [ ] connection timeout
 - [ ] handle connection failures (-> retries with final notification) even if not in listening mode

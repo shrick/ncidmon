@@ -9,14 +9,14 @@ from datetime import datetime
 from twisted.protocols.basic import LineReceiver
 
 # application
-import cidlog
-import notifications
-import misc
+from CIDEntry import CIDEntry
+from notifications import notify_current_incoming_call, notify_recent_incoming_call
+from misc import get_digits_count, dprint, CONFIG
 
 class NCIDClient(LineReceiver):
     '''Simple NCID client handling recceived lines'''
     
-    _cidlog_entries = []
+    _cid_entries = []
     _log_dumped = False
     _index_width = 1
     
@@ -28,7 +28,7 @@ class NCIDClient(LineReceiver):
         # (if not already done before)
         def dump_if_not_already_done():
             if not self._log_dumped:
-                misc.dprint('timeout, dumping log...')
+                dprint('timeout, dumping log...')
                 self.outputRecentCalls()
                 self._log_dumped = True
         
@@ -36,9 +36,9 @@ class NCIDClient(LineReceiver):
     
     
     def sendAnnouncing(self):
-        misc.dprint('broadcasting myself...')
+        dprint('broadcasting myself...')
         self._my_announcing = 'MSG: {0} client connected at {1}'.format(
-            misc.CONFIG['NCID_CLIENT_NAME'], datetime.now()
+            CONFIG['NCID_CLIENT_NAME'], datetime.now()
         )
         self.sendLine(self._my_announcing)
     
@@ -59,7 +59,7 @@ class NCIDClient(LineReceiver):
             if not self._log_dumped and line == self._my_announcing:
                 # seen my own broadcast (MSG: ...)
                 # dumping log
-                misc.dprint('seen own announcing, dumping log...')
+                dprint('seen own announcing, dumping log...')
                 self.outputRecentCalls()
                 self._log_dumped = True
                 
@@ -71,56 +71,54 @@ class NCIDClient(LineReceiver):
         '''collect CIDLOGs, notify CIDs,'''
         
         if line.startswith('CID'):
-            data = line.split('*')
-            label = data.pop(0).strip(': ')
-            items = dict(zip(*[iter(data)] * 2))
+            entry = CIDEntry(line)
             
-            if label == 'CIDLOG':
+            if entry.label == 'CIDLOG':
                 # record log entry
-                self._cidlog_entries.append(items)
+                self._cid_entries.append(entry)
                 
                 # update width of index
-                self._index_width = misc.get_digits_count(
-                    len(self._cidlog_entries)
+                self._index_width = get_digits_count(
+                    len(self._cid_entries)
                 )
                 
                 return True
             
-            elif label == 'CID':
+            elif entry.label == 'CID':
                 # notify incoming call
-                notifications.notify_current_incoming_call(items)
+                notify_current_incoming_call(entry)
                 
                 # store as normal log entry
-                self._cidlog_entries.append(items)
+                self._cid_entries.append(entry)
                 
                 # print on console
                 stars = '*' * self._index_width
-                print '(' + stars + ') ' + cidlog.get_pretty_cid(items)
+                print '(' + stars + ') ' + entry.get_pretty_summary()
                 return True
             
         # not handled
         return False 
     
     def outputRecentCalls(self):
-        if self._cidlog_entries:
+        if self._cid_entries:
             # sort entries
             sorted_entries = sorted(
-                self._cidlog_entries, key=cidlog.get_sortable_entry_key
+                self._cid_entries, key=CIDEntry.get_sortable_key
             )
             
             # limit output to recent calls, leaving original index intact
             recent_indexed_entries = [
                 pair for pair in enumerate(sorted_entries, 1)
-            ][- misc.CONFIG['MAX_LOG_OUTPUT']:]
+            ][- CONFIG['MAX_LOG_OUTPUT']:]
 
             # build format string with log size dependent index width modifier
             format_string = '({0:0' + str(self._index_width) + '}) {1}'
             
             # print to console
-            misc.dprint('formatted log follows...')
-            for index, items in recent_indexed_entries:
-                print format_string.format(index, cidlog.get_pretty_cid(items))
+            dprint('formatted log follows...')
+            for index, entry in recent_indexed_entries:
+                print format_string.format(index, entry.get_pretty_summary())
             
             # notify most recent incoming call
-            notifications.notify_recent_incoming_call(sorted_entries[-1])
+            notify_recent_incoming_call(sorted_entries[-1])
 

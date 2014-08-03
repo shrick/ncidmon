@@ -2,8 +2,7 @@
 # -*- coding: utf8 -*-
 
 # application
-import cidlog
-import misc
+from misc import CONFIG
 
 
 pynotify = None # to reduce dependencies if used as module
@@ -19,7 +18,7 @@ def enable_notifcations(enable):
             pynotify = __import__('pynotify')
         if previous_status is None:
             # not yet initialized
-            pynotify.init(misc.CONFIG['NCID_CLIENT_NAME'])
+            pynotify.init(CONFIG['NCID_CLIENT_NAME'])
     elif pynotify:
         pynotify = False
 
@@ -28,37 +27,37 @@ def enable_notifcations(enable):
 # https://wiki.ubuntu.com/NotificationDevelopmentGuidelines
 # http://mamu.backmeister.name/programmierung-und-skripting/pynotify-python-skript-zeigt-notify-osd-bubbles/
 # http://www.cmdln.org/2008/12/18/simple-network-popup-with-python-and-libnotify/
-def notify_call(title, items, priority=None, expires=None):
+def notify_call(title, cid_entry, priority=None, expires=None):
     if not pynotify:
         return
     
     # phone number
-    body_number = '<b>{0}</b>'.format(cidlog.get_pretty_number(items))
+    body_number = '<b>{0}</b>'.format(cid_entry.get_pretty_number())
     
     # add name from adressbook
-    name = cidlog.resolve_number(items)
+    name = cid_entry.resolve_number()
     if name:
         body_number += '\n<i>' + name + '</i>\n'
     
     # add lookup links if number is not suppressed
-    number = cidlog.get_number(items)
+    number = cid_entry.get_number()
     if number.isdigit():
         SEP = '\n'
         body_number += SEP + SEP.join(
             '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
-                for name, url in misc.CONFIG['NUMBER_LOOKUP_PAGES']
+                for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
         )
    
     # format message body
     body = '{0}, {1}\n\n{2}'.format(
-        cidlog.get_pretty_date(items),
-        cidlog.get_pretty_time(items),
+        cid_entry.get_pretty_date(),
+        cid_entry.get_pretty_time(),
         body_number
     )
     
     # create notification
     message = pynotify.Notification(
-        title, body, misc.CONFIG['NOTIFICATION_ICON']
+        title, body, CONFIG['NOTIFICATION_ICON']
     )
     
     # set notification properties
