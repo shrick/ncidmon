@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+
 # system
 import sys
 
@@ -10,13 +11,15 @@ from twisted.internet import reactor
 
 # application
 from NCIDClientFactory import NCIDClientFactory
-import misc
 import notifications
+import misc
+
+def print_usage_and_exit(name):
+    print 'usage:', name, "[--listen] [--disable-notifications]"
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    misc.CONFIG['DEBUG'] = True
-    
     # Features:
     # - notify recent and incoming calls
     #   -> default: enabled
@@ -42,23 +45,6 @@ if __name__ == "__main__":
     
     # configure notifications
     notifications.enable_notifcations(notifications_enabled)
-    
-    # import mapping of numbers to names
-    try:
-        import addressbook
-        # # Python file with simple dictionary
-        # # -*- coding: utf8 -*-
-        #
-        # directory = {
-        #     '0123 / 45 67 - 89': 'John Doo',
-        #     '0132435465': 'Mary Jane'
-        # }
-        
-        # store normalized telephone numbers of numbers found in adressbook
-        misc.addresses.update(misc.normalize_adressbook(addressbook.directory))
-        misc.dprint('addressbook found')
-    except:
-        misc.dprint('no addressbook found')
     
     # run the client
     reactor.connectTCP(

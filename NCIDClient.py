@@ -9,9 +9,9 @@ from datetime import datetime
 from twisted.protocols.basic import LineReceiver
 
 # application
-import misc
+import cidlog
 import notifications
-
+import misc
 
 class NCIDClient(LineReceiver):
     '''Simple NCID client handling recceived lines'''
@@ -82,7 +82,7 @@ class NCIDClient(LineReceiver):
                 # store as normal log entry
                 self._cidlog_entries.append(items)
                 # print on console
-                print '(**) ' + misc.get_pretty_cid(items)
+                print '(**) ' + cidlog.get_pretty_cid(items)
                 return True
             
         # not handled
@@ -92,13 +92,13 @@ class NCIDClient(LineReceiver):
         if self._cidlog_entries:
             # sort entries
             sorted_entries = sorted(
-                self._cidlog_entries, key=misc.get_sortable_entry_key
+                self._cidlog_entries, key=cidlog.get_sortable_entry_key
             )
             
             # print to console
             misc.dprint('formatted log follows...')
             for index, items in enumerate(sorted_entries):
-                print '({0:02}) {1}'.format(index + 1, misc.get_pretty_cid(items))
+                print '({0:02}) {1}'.format(index + 1, cidlog.get_pretty_cid(items))
             
             # notify recent incoming call
             notifications.notify_recent_incoming_call(sorted_entries[-1])

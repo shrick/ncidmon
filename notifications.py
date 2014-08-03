@@ -2,7 +2,10 @@
 # -*- coding: utf8 -*-
 
 # application
+import cidlog
+import PhoneBook
 import misc
+
 
 pynotify = None # to reduce dependencies if used as module
 
@@ -31,12 +34,12 @@ def notify_call(title, items, priority=None, expires=None):
         return
     
     # phone number
-    body_number = '<b>{0}</b>'.format(misc.get_pretty_number(items))
+    body_number = '<b>{0}</b>'.format(cidlog.get_pretty_number(items))
     
-    number = misc.get_number(items)
+    number = cidlog.get_number(items)
     
     # add name from adressbook
-    name = misc.resolve_number(number)
+    name = PhoneBook.resolve_number(number)
     if name:
         body_number += '\n<i>' + name + '</i>\n'
     
@@ -50,8 +53,8 @@ def notify_call(title, items, priority=None, expires=None):
    
     # format message body
     body = '{0}, {1}\n\n{2}'.format(
-        misc.get_pretty_date(items),
-        misc.get_pretty_time(items),
+        cidlog.get_pretty_date(items),
+        cidlog.get_pretty_time(items),
         body_number
     )
     
