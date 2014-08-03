@@ -18,6 +18,8 @@ CONFIG = {
         (r'Das Örtliche', r'http://mobil.dasoertliche.de/search?what={number}'),
         (r'Klicktel', r'http://www.klicktel.de/rueckwaertssuche/{number}'),
     ),
+    'MAX_LOG_OUTPUT'    : 10,               # recent log entries count to output
+    # TBD limit by days
 }
 
 

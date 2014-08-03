@@ -108,14 +108,19 @@ class NCIDClient(LineReceiver):
                 self._cidlog_entries, key=cidlog.get_sortable_entry_key
             )
             
-            # format string with log size dependent index width modifier
+            # limit output to recent calls, leaving original index intact
+            recent_indexed_entries = [
+                pair for pair in enumerate(sorted_entries, 1)
+            ][- misc.CONFIG['MAX_LOG_OUTPUT']:]
+
+            # build format string with log size dependent index width modifier
             format_string = '({0:0' + str(self._index_width) + '}) {1}'
             
             # print to console
             misc.dprint('formatted log follows...')
-            for index, items in enumerate(sorted_entries):
-                print format_string.format(index + 1, cidlog.get_pretty_cid(items))
+            for index, items in recent_indexed_entries:
+                print format_string.format(index, cidlog.get_pretty_cid(items))
             
-            # notify recent incoming call
+            # notify most recent incoming call
             notifications.notify_recent_incoming_call(sorted_entries[-1])
 
