@@ -3,7 +3,6 @@
 
 # application
 import cidlog
-import PhoneBook
 import misc
 
 
@@ -36,14 +35,13 @@ def notify_call(title, items, priority=None, expires=None):
     # phone number
     body_number = '<b>{0}</b>'.format(cidlog.get_pretty_number(items))
     
-    number = cidlog.get_number(items)
-    
     # add name from adressbook
-    name = PhoneBook.resolve_number(number)
+    name = cidlog.resolve_number(items)
     if name:
         body_number += '\n<i>' + name + '</i>\n'
     
     # add lookup links if number is not suppressed
+    number = cidlog.get_number(items)
     if number.isdigit():
         SEP = '\n'
         body_number += SEP + SEP.join(

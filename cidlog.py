@@ -6,7 +6,7 @@ import string
 from datetime import datetime
 
 # application
-import PhoneBook
+import phonebook
 
 
 # http://de.wikipedia.org/wiki/Telefonvorwahl_%28Deutschland%29
@@ -101,6 +101,10 @@ def get_number(items):
     return items.get('NMBR')
 
 
+def resolve_number(items):
+    return phonebook.resolve_number(get_number(items))
+
+
 def get_pretty_number(items):
     '''simple formatting for common german numbers'''
     
@@ -133,7 +137,7 @@ def get_pretty_cid(items):
     )
     
     # add name from adressbook
-    name = PhoneBook.resolve_number(get_number(items))
+    name = resolve_number(items)
     if name:
         line += ' (' + name + ')'
     
