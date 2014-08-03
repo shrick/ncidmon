@@ -4,7 +4,7 @@
 # system
 import string
 from datetime import datetime
-
+import math
 
 CONFIG = {
     'DEBUG'              : False,           # print debug output?
@@ -24,6 +24,9 @@ CONFIG = {
 def dprint(*args):
     if CONFIG['DEBUG']:
         print '[DEBUG]', ' '.join(str(a) for a in args)
+
+def get_digits_count(value):    
+    return int(math.floor(math.log10(abs(int(value)))) + 1)
 
 
 

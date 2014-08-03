@@ -18,6 +18,7 @@ class NCIDClient(LineReceiver):
     
     _cidlog_entries = []
     _log_dumped = False
+    _index_width = 1
     
     
     def connectionMade(self):
@@ -56,10 +57,13 @@ class NCIDClient(LineReceiver):
             print '>>>', line
             
             if not self._log_dumped and line == self._my_announcing:
-                # seen my own broadcast (MSG: ...), dumping log
+                # seen my own broadcast (MSG: ...)
+                # dumping log
                 misc.dprint('seen own announcing, dumping log...')
                 self.outputRecentCalls()
                 self._log_dumped = True
+                
+                # notify factory that all log entries were received
                 self.factory.receivedFullLog()
 
 
@@ -68,21 +72,30 @@ class NCIDClient(LineReceiver):
         
         if line.startswith('CID'):
             data = line.split('*')
-            label = data.pop(0).strip(': ');
+            label = data.pop(0).strip(': ')
             items = dict(zip(*[iter(data)] * 2))
             
             if label == 'CIDLOG':
                 # record log entry
                 self._cidlog_entries.append(items)
+                
+                # update width of index
+                self._index_width = misc.get_digits_count(
+                    len(self._cidlog_entries)
+                )
+                
                 return True
             
             elif label == 'CID':
                 # notify incoming call
                 notifications.notify_current_incoming_call(items)
+                
                 # store as normal log entry
                 self._cidlog_entries.append(items)
+                
                 # print on console
-                print '(**) ' + cidlog.get_pretty_cid(items)
+                stars = '*' * self._index_width
+                print '(' + stars + ') ' + cidlog.get_pretty_cid(items)
                 return True
             
         # not handled
@@ -95,10 +108,13 @@ class NCIDClient(LineReceiver):
                 self._cidlog_entries, key=cidlog.get_sortable_entry_key
             )
             
+            # format string with log size dependent index width modifier
+            format_string = '({0:0' + str(self._index_width) + '}) {1}'
+            
             # print to console
             misc.dprint('formatted log follows...')
             for index, items in enumerate(sorted_entries):
-                print '({0:02}) {1}'.format(index + 1, cidlog.get_pretty_cid(items))
+                print format_string.format(index + 1, cidlog.get_pretty_cid(items))
             
             # notify recent incoming call
             notifications.notify_recent_incoming_call(sorted_entries[-1])
