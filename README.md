@@ -1,11 +1,11 @@
-python-ncid-client
-==================
+NCIDmon
+=======
 
 Basic NCID command line client written in Python 2
 
 **SYNOPSIS**
 
-    ncid.py [OPTION]
+    ncidmon.py [OPTION]
   
 **DESCRIPTION**
 
