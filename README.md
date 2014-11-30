@@ -45,3 +45,5 @@ Show usage and exit.
 - [ ] connection timeout
 - [ ] handle connection failures (-> retries with final notification) even if not in listening mode
 - [ ] maybe two protocol implementations for simple request and continuous listening mode
+- [ ] support wildcard numbers (corporate telephone system)
+- [x] builtin webserver providing complete call list

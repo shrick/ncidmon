@@ -1,17 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf8 -*-
 
 # system
 import sys
 
-# apt-get python-notify2  or  --disable-notifications
 # apt-get twisted-twisted  or  apt-get python-twisted-core
+from twisted.web import server as http_server
 from twisted.internet import reactor
 
 # application
-from NCIDClientFactory import NCIDClientFactory
-from notifications import enable_notifcations
-from misc import dprint, CONFIG
+from ncidmon.client import NCIDClientFactory
+from ncidmon.webserver import CallListServer
+from ncidmon.notifications import enable_notifcations
+from ncidmon.misc import dprint, CONFIG
 
 def print_usage_and_exit(name):
     print 'usage:', name, "[--listen] [--disable-notifications]"
@@ -45,12 +46,29 @@ if __name__ == "__main__":
     # configure notifications
     enable_notifcations(notifications_enabled)
     
+    
+    # run the call list providing web server
+    try:
+        call_list_server = CallListServer()
+        site = http_server.Site(call_list_server)
+        reactor.listenTCP(CONFIG['HTTP_PORT'], site, interface=CONFIG['HTTP_HOST'])
+    except:
+        # if already in use
+        call_list_server = None     
+    
     # run the client
+    ncid_client_factory = NCIDClientFactory(
+        reactor,
+        listen_enabled,
+        call_list_server
+    )    
     reactor.connectTCP(
         CONFIG['NCID_SERVER'],
         CONFIG['NCID_PORT'],
-        NCIDClientFactory(reactor, listen_enabled)
+        ncid_client_factory
     )
+    
+    # run the twisted event dispatcher
     reactor.run()
   
     dprint('done.')

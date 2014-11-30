@@ -4,14 +4,70 @@
 # system
 from datetime import datetime
 
-# apt-get python-notify2  or  --disable-notifications
 # apt-get twisted-twisted  or  apt-get python-twisted-core
 from twisted.protocols.basic import LineReceiver
+from twisted.internet.protocol import ReconnectingClientFactory
 
 # application
-from CIDEntry import CIDEntry
+from cidentry import CIDEntry
 from notifications import notify_current_incoming_call, notify_recent_incoming_call
 from misc import get_digits_count, dprint, CONFIG
+
+
+class NCIDClientFactory(ReconnectingClientFactory):
+    ''' NCID client factory with reconnect feature'''
+    
+    
+    def __init__(self, the_reactor, listen, call_list_server=None):
+        self.reactor = the_reactor
+        self._listen = listen
+        self._call_list_server = call_list_server
+    
+    
+    def startedConnecting(self, connector):
+        dprint(
+            "connecting to NCID server '{0.host}:{0.port}'...".format(
+                connector.getDestination()
+            )
+        )
+    
+    
+    def buildProtocol(self, addr):
+        dprint('connected')
+        
+        if self._listen:
+            dprint('resetting reconnection delay...')
+            self.resetDelay()
+        else:
+            dprint('terminating in a few seconds...')
+            self.reactor.callLater(5, self.reactor.stop)
+        
+        dprint('spawning NCID client instance...')
+        protocol = NCIDClient()
+        protocol.factory = self
+        protocol.call_list_server = self._call_list_server
+        return protocol
+    
+    
+    def receivedFullLog(self):
+        '''To get notified by client, so we may shutdown'''
+        if not self._listen:
+            self.reactor.stop()
+    
+    
+    def clientConnectionLost(self, connector, reason):
+        if self._listen:
+            dprint('lost connection:', reason)
+            ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
+    
+    
+    def clientConnectionFailed(self, connector, reason):
+        if self._listen:
+            dprint('connection failed:', reason)
+            ReconnectingClientFactory.clientConnectionFailed(
+                self, connector, reason
+            )
+
 
 class NCIDClient(LineReceiver):
     '''Simple NCID client handling recceived lines'''
@@ -84,23 +140,31 @@ class NCIDClient(LineReceiver):
                 
                 return True
             
-            elif entry.label == 'CID':
-                # notify incoming call
-                notify_current_incoming_call(entry)
-                
+            elif entry.label == 'CID':                
                 # store as normal log entry
                 self._cid_entries.append(entry)
+            
+                # update call list server
+                if self.call_list_server:
+                    self.call_list_server.update_call_list(self._cid_entries)
                 
                 # print on console
                 stars = '*' * self._index_width
                 print '(' + stars + ') ' + entry.get_pretty_summary()
                 return True
+                
+                # notify incoming call
+                notify_current_incoming_call(entry)
             
         # not handled
         return False 
     
     def outputRecentCalls(self):
         if self._cid_entries:
+            # update call list server
+            if self.call_list_server:
+                self.call_list_server.update_call_list(self._cid_entries)
+            
             # sort entries
             sorted_entries = sorted(
                 self._cid_entries, key=CIDEntry.get_sortable_key
@@ -109,7 +173,7 @@ class NCIDClient(LineReceiver):
             # limit output to recent calls, leaving original index intact
             recent_indexed_entries = [
                 pair for pair in enumerate(sorted_entries, 1)
-            ][- CONFIG['MAX_LOG_OUTPUT']:]
+            ][-CONFIG['MAX_LOG_OUTPUT']:]
 
             # build format string with log size dependent index width modifier
             format_string = '({0:0' + str(self._index_width) + '}) {1}'
@@ -118,6 +182,14 @@ class NCIDClient(LineReceiver):
             dprint('formatted log follows...')
             for index, entry in recent_indexed_entries:
                 print format_string.format(index, entry.get_pretty_summary())
+            
+#            # print to console and file
+#            f = open('./cid.log', 'w+')
+#            dprint('formatted log follows...')
+#            for index, entry in recent_indexed_entries:
+#                s = format_string.format(index, entry.get_pretty_summary())
+#                print s
+#                print >> f, s
             
             # notify most recent incoming call
             notify_recent_incoming_call(sorted_entries[-1])

@@ -4,6 +4,7 @@
 # application
 from misc import CONFIG
 
+# apt-get python-notify2  or  --disable-notifications
 
 pynotify = None # to reduce dependencies if used as module
 
@@ -76,13 +77,21 @@ def _build_body_name(cid_entry):
 
 
 def _build_body_links(cid_entry):
+    links = ""
+    
     number = cid_entry.get_number()
     if number.isdigit():
-        return '\n' + '\n'.join(
+        links += '\n' + '\n'.join(
             '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
                 for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
+        ) + links
+    
+    links += '\n\n' + '<a href="{0}:{1}">All recent calls...</a>'.format(
+            "http://localhost",
+            CONFIG['HTTP_PORT']
         )
-    return ""
+        
+    return links
 
 
 def _set_message_properties(message, priority, expires):
