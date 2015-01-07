@@ -47,3 +47,4 @@ Show usage and exit.
 - [ ] maybe two protocol implementations for simple request and continuous listening mode
 - [ ] support wildcard numbers (corporate telephone system)
 - [x] builtin webserver providing complete call list
+* [ ] i18n using gettext

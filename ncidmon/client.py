@@ -85,8 +85,8 @@ class NCIDClient(LineReceiver):
         def dump_if_not_already_done():
             if not self._log_dumped:
                 dprint('timeout, dumping log...')
-                self.outputRecentCalls()
                 self._log_dumped = True
+                self.outputRecentCalls()
         
         self.factory.reactor.callLater(3, dump_if_not_already_done)
     
@@ -94,8 +94,8 @@ class NCIDClient(LineReceiver):
     def sendAnnouncing(self):
         dprint('broadcasting myself...')
         self._my_announcing = 'MSG: {0} client connected at {1}'.format(
-            CONFIG['NCID_CLIENT_NAME'], datetime.now()
-        )
+                CONFIG['NCID_CLIENT_NAME'], datetime.now()
+            )
         self.sendLine(self._my_announcing)
     
     
@@ -116,13 +116,13 @@ class NCIDClient(LineReceiver):
                 # seen my own broadcast (MSG: ...)
                 # dumping log
                 dprint('seen own announcing, dumping log...')
-                self.outputRecentCalls()
                 self._log_dumped = True
+                self.outputRecentCalls()
                 
                 # notify factory that all log entries were received
                 self.factory.receivedFullLog()
-
-
+    
+    
     def _handleCIDAndCIDLOG(self, line):
         '''collect CIDLOGs, notify CIDs,'''
         
@@ -140,13 +140,12 @@ class NCIDClient(LineReceiver):
                 
                 return True
             
-            elif entry.label == 'CID':                
+            elif entry.label == 'CID':
                 # store as normal log entry
                 self._cid_entries.append(entry)
-            
+                
                 # update call list server
-                if self.call_list_server:
-                    self.call_list_server.update_call_list(self._cid_entries)
+                self._updateCallListServer()
                 
                 # print on console
                 stars = '*' * self._index_width
@@ -157,13 +156,18 @@ class NCIDClient(LineReceiver):
                 notify_current_incoming_call(entry)
             
         # not handled
-        return False 
+        return False
+    
+    
+    def _updateCallListServer(self):
+        if self.call_list_server:
+            self.call_list_server.update_call_list(self._cid_entries)
+    
     
     def outputRecentCalls(self):
         if self._cid_entries:
             # update call list server
-            if self.call_list_server:
-                self.call_list_server.update_call_list(self._cid_entries)
+            self._updateCallListServer()
             
             # sort entries
             sorted_entries = sorted(
@@ -183,13 +187,12 @@ class NCIDClient(LineReceiver):
             for index, entry in recent_indexed_entries:
                 print format_string.format(index, entry.get_pretty_summary())
             
-#            # print to console and file
+#            # print to file
 #            f = open('./cid.log', 'w+')
-#            dprint('formatted log follows...')
 #            for index, entry in recent_indexed_entries:
-#                s = format_string.format(index, entry.get_pretty_summary())
-#                print s
-#                print >> f, s
+#                print >> f, format_string.format(
+#                      index, entry.get_pretty_summary()
+#                   )
             
             # notify most recent incoming call
             notify_recent_incoming_call(sorted_entries[-1])
