@@ -5,7 +5,7 @@ Basic NCID command line client written in Python 2
 
 **SYNOPSIS**
 
-    ncidmon.py [OPTION]
+    __main__.py [OPTION]
   
 **DESCRIPTION**
 
@@ -48,3 +48,5 @@ Show usage and exit.
 - [ ] support wildcard numbers (corporate telephone system)
 - [x] builtin webserver providing complete call list
 * [ ] i18n using gettext
+* [ ] execution as zip file
+

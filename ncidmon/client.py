@@ -78,7 +78,7 @@ class NCIDClient(LineReceiver):
     
     
     def connectionMade(self):
-        self.sendAnnouncing()
+        self._sendAnnouncing()
         
         # output recent calls after some time the logs should be received
         # (if not already done before)
@@ -86,17 +86,9 @@ class NCIDClient(LineReceiver):
             if not self._log_dumped:
                 dprint('timeout, dumping log...')
                 self._log_dumped = True
-                self.outputRecentCalls()
+                self._outputRecentCalls()
         
         self.factory.reactor.callLater(3, dump_if_not_already_done)
-    
-    
-    def sendAnnouncing(self):
-        dprint('broadcasting myself...')
-        self._my_announcing = 'MSG: {0} client connected at {1}'.format(
-                CONFIG['NCID_CLIENT_NAME'], datetime.now()
-            )
-        self.sendLine(self._my_announcing)
     
     
     def lineReceived(self, line):
@@ -117,10 +109,18 @@ class NCIDClient(LineReceiver):
                 # dumping log
                 dprint('seen own announcing, dumping log...')
                 self._log_dumped = True
-                self.outputRecentCalls()
+                self._outputRecentCalls()
                 
                 # notify factory that all log entries were received
                 self.factory.receivedFullLog()
+    
+    
+    def _sendAnnouncing(self):
+        dprint('broadcasting myself...')
+        self._my_announcing = 'MSG: {0} client connected at {1}'.format(
+                CONFIG['NCID_CLIENT_NAME'], datetime.now()
+            )
+        self.sendLine(self._my_announcing)
     
     
     def _handleCIDAndCIDLOG(self, line):
@@ -164,7 +164,7 @@ class NCIDClient(LineReceiver):
             self.call_list_server.update_call_list(self._cid_entries)
     
     
-    def outputRecentCalls(self):
+    def _outputRecentCalls(self):
         if self._cid_entries:
             # update call list server
             self._updateCallListServer()

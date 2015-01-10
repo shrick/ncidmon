@@ -44,10 +44,6 @@ if __name__ == "__main__":
             print 'unknown argument:', arg
             print_usage_and_exit(sys.argv[0])
     
-    # configure notifications
-    enable_notifcations(notifications_enabled)
-    
-    
     # run the call list providing web server
     try:
         call_list_server = CallListServer()
@@ -55,7 +51,16 @@ if __name__ == "__main__":
         reactor.listenTCP(CONFIG['HTTP_PORT'], site, interface=CONFIG['HTTP_HOST'])
     except:
         # if already in use
-        call_list_server = None     
+        call_list_server = None
+    
+    # configure notifications
+    enable_notifcations(
+        notifications_enabled,
+        # 'All recent calls...' link: always, except when 
+        #   not listening for incomung calls and 
+        #   no webserver instance was yet running
+        listen_enabled or not call_list_server 
+    )
     
     # run the client
     ncid_client_factory = NCIDClientFactory(

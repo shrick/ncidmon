@@ -7,11 +7,14 @@ from misc import CONFIG
 # apt-get python-notify2  or  --disable-notifications
 
 pynotify = None # to reduce dependencies if used as module
+recent_calls_link = False
 
-def enable_notifcations(enable):
+def enable_notifcations(enable, recent_calls=True):
     global pynotify
+    global recent_calls_link
     
     if enable:
+        recent_calls_link = recent_calls
         previous_status = pynotify
         
         if not previous_status:
@@ -86,7 +89,8 @@ def _build_body_links(cid_entry):
                 for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
         ) + links
     
-    links += '\n\n' + '<a href="{0}:{1}">All recent calls...</a>'.format(
+    if recent_calls_link:
+        links += '\n\n' + '<a href="{0}:{1}">All recent calls...</a>'.format(
             "http://localhost",
             CONFIG['HTTP_PORT']
         )
