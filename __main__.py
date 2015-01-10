@@ -14,6 +14,7 @@ from ncidmon.webserver import CallListServer
 from ncidmon.notifications import enable_notifcations
 from ncidmon.misc import dprint, CONFIG
 
+
 def print_usage_and_exit(name):
     print 'usage:', name, "[--listen] [--disable-notifications]"
     sys.exit(0)
