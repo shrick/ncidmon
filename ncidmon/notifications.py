@@ -8,10 +8,12 @@ from .misc import CONFIG
 
 pynotify = None # to reduce dependencies if used as module
 recent_calls_link = False
+hyperlinks = None # server body hyperlinks capability
 
 def enable_notifcations(enable, recent_calls=True):
     global pynotify
     global recent_calls_link
+    global hyperlinks
     
     if enable:
         recent_calls_link = recent_calls
@@ -25,6 +27,9 @@ def enable_notifcations(enable, recent_calls=True):
             if not pynotify.init(CONFIG['NCID_CLIENT_NAME']):
                 # disable on errors
                 pynotify = None
+            else:
+                hyperlinks = 'body-hyperlinks' in pynotify.get_server_caps()
+                
     elif pynotify:
         pynotify = False
 
@@ -82,19 +87,20 @@ def _build_body_name(cid_entry):
 def _build_body_links(cid_entry):
     links = ""
     
-    number = cid_entry.get_number()
-    if number.isdigit():
-        links += '\n' + '\n'.join(
-            '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
-                for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
-        ) + links
-    
-    if recent_calls_link:
-        links += '\n\n' + '<a href="{0}:{1}">All recent calls...</a>'.format(
-            "http://localhost",
-            CONFIG['HTTP_PORT']
-        )
+    if hyperlinks:    
+        number = cid_entry.get_number()
+        if number.isdigit():
+            links += '\n' + '\n'.join(
+                '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
+                    for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
+            ) + links
         
+        if recent_calls_link:
+            links += '\n\n' + '<a href="{0}:{1}">All recent calls...</a>'.format(
+                "http://localhost",
+                CONFIG['HTTP_PORT']
+            )
+    
     return links
 
 
