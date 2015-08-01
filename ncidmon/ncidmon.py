@@ -9,10 +9,10 @@ from twisted.web import server as http_server
 from twisted.internet import reactor
 
 # application
-from ncidmon.client import NCIDClientFactory
-from ncidmon.webserver import CallListServer
-from ncidmon.notifications import enable_notifcations
-from ncidmon.misc import dprint, CONFIG
+from .client import NCIDClientFactory
+from .webserver import CallListServer
+from .notifications import enable_notifcations
+from .misc import dprint, CONFIG
 
 
 def print_usage_and_exit(name):
@@ -20,7 +20,7 @@ def print_usage_and_exit(name):
     sys.exit(0)
 
 
-if __name__ == "__main__":
+def main():
     # Features:
     # - notify recent and incoming calls
     #   -> default: enabled

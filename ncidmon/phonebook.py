@@ -5,7 +5,7 @@
 from string import maketrans, digits
 
 # application
-from misc import dprint
+from .misc import dprint
 
 phonebook = {}
 
@@ -30,7 +30,7 @@ def _get_normalized_phonebook(directory):
 
 # import mapping of numbers to names
 try:
-    import subscribers
+    from .subscribers import directory as sd
     # # Python file with simple dictionary
     # # -*- coding: utf8 -*-
     #
@@ -40,7 +40,7 @@ try:
     # }
     
     # store normalized telephone numbers of numbers found in adressbook
-    phonebook.update(_get_normalized_phonebook(subscribers.directory))
+    phonebook.update(_get_normalized_phonebook(sd))
     dprint('subscribers found')
 except:
     dprint('no subscribers found')

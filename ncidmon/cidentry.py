@@ -5,7 +5,7 @@
 from datetime import datetime
 
 # application
-from phonebook import resolve_number as resolve_phonebook_number
+from .phonebook import resolve_number as resolve_phonebook_number
 
 class CIDEntry(object):
     
@@ -151,4 +151,5 @@ _CODE_LENGTHS = {
     # smaller cities
     '0355':     4,  # Cottbus
     '033332':   6,  # Gartz (Oder)
+    '03984':    5,  # Prenzlau
 }

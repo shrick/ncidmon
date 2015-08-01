@@ -9,9 +9,9 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ReconnectingClientFactory
 
 # application
-from cidentry import CIDEntry
-from notifications import notify_current_incoming_call, notify_recent_incoming_call
-from misc import get_digits_count, dprint, CONFIG
+from .cidentry import CIDEntry
+from .notifications import notify_current_incoming_call, notify_recent_incoming_call
+from .misc import get_digits_count, dprint, CONFIG
 
 
 class NCIDClientFactory(ReconnectingClientFactory):

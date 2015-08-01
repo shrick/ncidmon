@@ -6,8 +6,8 @@
 from twisted.web import resource
 
 # application
-from cidentry import CIDEntry
-from misc import dprint, CONFIG
+from .cidentry import CIDEntry
+from .misc import dprint, CONFIG
 
 class CallListServer(resource.Resource):
     

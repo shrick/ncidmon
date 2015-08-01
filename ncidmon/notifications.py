@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 # application
-from misc import CONFIG
+from .misc import CONFIG
 
 # apt-get python-notify2  or  --disable-notifications
 

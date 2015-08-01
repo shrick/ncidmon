@@ -12,7 +12,7 @@ CONFIG = {
     'CONNECT_TIMEOUT'    : 5.0,             # connect timeout in seconds (currently unused)
     'HTTP_PORT'          : 8080,            # port for internal call list web server
     'HTTP_HOST'          : 'localhost',     # interface for internal call list web server
-    'NCID_CLIENT_NAME'   : 'ncid.py',       # name of this client for broadcasts
+    'NCID_CLIENT_NAME'   : 'NCIDmon',       # name of this client for broadcasts
     'NOTIFICATION_ICON'  : r'phone',        # name of icon in notification windows
     'NUMBER_LOOKUP_PAGES': (                # (name, url) tuples for number lookup
         # replace search number in loopkup URL by '{number}' 
