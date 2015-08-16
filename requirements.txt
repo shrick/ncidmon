@@ -1,4 +1,3 @@
 twisted
-pynotify
+notify
 flake8
-
