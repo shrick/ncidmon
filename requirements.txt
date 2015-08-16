@@ -1,0 +1,4 @@
+twisted
+pynotify
+flake8
+
