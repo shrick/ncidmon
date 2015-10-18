@@ -17,11 +17,11 @@ Optional arguments:
 
 *--listen*
 
-Listen for incoming calls. Can be used for running in background, e.g. automatically started in user session.
+Listen for incoming calls. Can be used for running in background, e.g. automatically started in user session. Recent calls are shown on standard output, with notifications enabled also per on screen notification. A web-based call list is also provided, per default on http://localhost:8080.
 
 *--disable-notifications*
 
-Show no notifcations for recent call and incoming calls. To be used for interactive checks of recent calls.
+Show no notifcations for recent call and incoming calls. To be used for instant checks of recent calls. With notifications enabled recent and/or incoming call information are displayed per popup. The ammount of information depends on the capabilities of your local notification OSD server.
 
 *-h, --help*
 
@@ -41,13 +41,11 @@ Show usage and exit.
 - [ ] limit log entries output on console by configurable time span
 - [ ] getopt command line parsing
 - [x] reorganize (split into multiple source file)
-- [ ] restructure (file and folder hierarchy)
-- [ ] command line options for server address
+- [ ] command line options for NCID and HTTP server addresses
 - [ ] connection timeout
-- [ ] handle connection failures (-> retries with final notification) even if not in listening mode
-- [ ] maybe two protocol implementations for simple request and continuous listening mode
+- [ ] handle connection failures (retries with final notification) even if not in listening mode
+- [ ] maybe two twisted protocol implementations for simple request and continuous listening mode
 - [ ] support wildcard numbers (corporate telephone system)
 - [x] builtin webserver providing complete call list
 - [ ] i18n using gettext
-- [ ] direct execution from zip file
-
+- [ ] python setup infrastructure
