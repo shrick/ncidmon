@@ -15,29 +15,29 @@ incoming calls. Built-in webserver provides list of all recent calls.
 
 Optional arguments:
 
-*<server>:<port>*
+    <server>:<port>
 
 Name or address and port of NCID server.
 
-*--listen*
+    --listen
 
 Listen for incoming calls. Can be used for running in background, e.g.
 automatically started in user session. Recent calls are shown on standard
 output, with notifications enabled also per on screen notification. A web-based
 call list is also provided, per default on http://localhost:8080.
 
-*--disable-notifications*
+    --disable-notifications
 
 Show no notifcations for recent call and incoming calls. To be used for instant
 checks of recent calls. With notifications enabled recent and/or incoming call
 information are displayed per popup. The ammount of information depends on the
 capabilities of your local notification OSD server.
 
-*-d, --debug*
+    -d, --debug
 
 Print debug output.
 
-*-h, --help*
+    -h, --help
 
 Show usage and exit.
 
@@ -62,4 +62,5 @@ Show usage and exit.
 - [ ] config command line options (using arparse) overriding application defaults
 - [ ] workaround EasyBox day/month inversion
 - [ ] python setup infrastructure
+
 
