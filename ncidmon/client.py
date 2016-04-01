@@ -22,6 +22,7 @@ class NCIDClientFactory(ReconnectingClientFactory):
         self.reactor = the_reactor
         self._listen = listen
         self._call_list_server = call_list_server
+        self._failures = 0
     
     
     def startedConnecting(self, connector):
@@ -49,33 +50,42 @@ class NCIDClientFactory(ReconnectingClientFactory):
         return protocol
     
     
-    def receivedFullLog(self):
+    def receivedFullLog(self, transport):
         '''To get notified by client, so we may shutdown'''
         if not self._listen:
-            self.reactor.stop()
+            transport.loseConnection()
     
     
     def clientConnectionLost(self, connector, reason):
+        self._failures = 0
+        dprint('lost connection:', reason.getErrorMessage())
+        
         if self._listen:
-            dprint('lost connection:', reason)
-            ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
+            ReconnectingClientFactory.clientConnectionLost(self, connector,
+                reason)
+        else:
+            self.reactor.stop()
     
     
     def clientConnectionFailed(self, connector, reason):
-        if self._listen:
-            dprint('connection failed:', reason)
+        self._failures += 1
+        dprint('connection failed ({}): {}'.format(self._failures,
+            reason. getErrorMessage()))
+        
+        if self._listen or self._failures < 4:
             ReconnectingClientFactory.clientConnectionFailed(
-                self, connector, reason
-            )
+                self, connector, reason)
+        else:
+            self.reactor.stop()
 
 
 class NCIDClient(LineReceiver):
     '''Simple NCID client handling recceived lines'''
     
-    _cid_entries = []
-    _log_dumped = False
-    _index_width = 1
-    
+    def __init__(self):
+        self._cid_entries = []
+        self._log_dumped = False
+        self._index_width = 1
     
     def connectionMade(self):
         self._sendAnnouncing()
@@ -87,6 +97,9 @@ class NCIDClient(LineReceiver):
                 dprint('timeout, dumping log...')
                 self._log_dumped = True
                 self._outputRecentCalls()
+                
+                # notify factory that all log entries were received
+                self.factory.receivedFullLog(self.transport)
         
         self.factory.reactor.callLater(3, dump_if_not_already_done)
     
@@ -95,24 +108,22 @@ class NCIDClient(LineReceiver):
         '''
         process received lines from server
         
-        check/handle CID* entries
+        check/handle CID/CIDLOG entries
         output anything else
-        dump received call log if own broadcast was received
+        dump received call log if own broadcast or call log status was received
         '''
-        
+        dprint("line received:", line)
         if not self._handleCIDAndCIDLOG(line):
             # anything else
             print '>>>', line
             
-            if not self._log_dumped and line == self._my_announcing:
-                # seen my own broadcast (MSG: ...)
-                # dumping log
-                dprint('seen own announcing, dumping log...')
-                self._log_dumped = True
-                self._outputRecentCalls()
-                
-                # notify factory that all log entries were received
-                self.factory.receivedFullLog()
+            if not self._log_dumped and self._checkEndOfCallLog(line):
+                    # dumping log
+                    self._log_dumped = True
+                    self._outputRecentCalls()
+                    
+                    # notify factory that all log entries were received
+                    self.factory.receivedFullLog(self.transport)
     
     
     def _sendAnnouncing(self):
@@ -123,10 +134,27 @@ class NCIDClient(LineReceiver):
         self.sendLine(self._my_announcing)
     
     
+    def _checkEndOfCallLog(self, line):
+        if line.startswith(self._my_announcing):
+            dprint('seen own announcing')
+            return True
+        
+        try:
+            code = int(line[:3])
+        except ValueError:
+            return False
+        else:
+            if 250 <= code <= 253:
+                dprint('call log status message received')
+                return True
+        
+        return False
+    
+    
     def _handleCIDAndCIDLOG(self, line):
         '''collect CIDLOGs, notify CIDs,'''
         
-        if line.startswith('CID'):
+        if line.startswith('CID:') or line.startswith('CIDLOG:'):
             entry = CIDEntry(line)
             
             if entry.label == 'CIDLOG':
@@ -150,10 +178,11 @@ class NCIDClient(LineReceiver):
                 # print on console
                 stars = '*' * self._index_width
                 print '(' + stars + ') ' + entry.get_pretty_summary()
-                return True
                 
                 # notify incoming call
                 notify_current_incoming_call(entry)
+                
+                return True
             
         # not handled
         return False

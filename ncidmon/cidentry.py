@@ -13,6 +13,12 @@ class CIDEntry(object):
         data = line.split('*')
         self._label = data.pop(0).strip(': ')
         self._items = dict(zip(*[iter(data)] * 2))
+        
+        # mormalize values
+        self._items['DATE'] = self._items['DATE'][:8]
+        self._items['TIME'] = "{:02d}{}".format(
+            int(self._items['TIME'][:2]) % 24,
+            self._items['TIME'][2:4])
     
     
     @property
@@ -22,7 +28,7 @@ class CIDEntry(object):
     
     def get_sortable_key(self):
         return datetime.strptime(
-            '{DATE} {TIME}'.format(**self._items), '%d%m%Y %H%M'
+            '{DATE} {TIME}'.format(**self._items), '%m%d%Y %H%M'
         ).strftime(
             '%Y-%m-%d %H:%M'
         )
@@ -46,7 +52,7 @@ class CIDEntry(object):
     
     
     def get_pretty_date(self):
-        return datetime.strptime(self._items['DATE'], '%d%m%Y').strftime('%d.%m.%Y')
+        return datetime.strptime(self._items['DATE'], '%m%d%Y').strftime('%d.%m.%Y')
     
     
     def get_pretty_time(self):

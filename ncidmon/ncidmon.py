@@ -16,7 +16,7 @@ from .misc import dprint, CONFIG
 
 
 def print_usage_and_exit(name):
-    print 'usage:', name, "[--listen] [--disable-notifications]"
+    print 'usage:', name, "[-h|--help] [-d|--debug] [--listen] [--disable-notifications] [<server>:<port>]"
     sys.exit(0)
 
 
@@ -36,13 +36,19 @@ def main():
     for arg in sys.argv[1:]:
         if arg in ('-h', '--help'):
             print_usage_and_exit(sys.argv[0])
-        if arg == '--disable-notifications':
+        elif arg in ('-d', '--debug'):
+            CONFIG.update({'DEBUG': True })
+        elif arg == '--disable-notifications':
             notifications_enabled = False
         elif arg == '--listen':
             listen_enabled = True
         else:
-            print 'unknown argument:', arg
-            print_usage_and_exit(sys.argv[0])
+            try:
+                server, port = arg.split(':')
+                CONFIG.update({'NCID_SERVER': server, 'NCID_PORT': int(port) })
+            except:
+                print 'unknown argument:', arg
+                print_usage_and_exit(sys.argv[0])
     
     # run the call list providing web server
     try:

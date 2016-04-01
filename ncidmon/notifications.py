@@ -66,11 +66,11 @@ def notify_call(title, cid_entry, priority=None, expires=None):
 
 
 def notify_current_incoming_call(items):
-    notify_call('Incoming call...', items, priority='high', expires='never')
+    notify_call('Incoming call...', items, priority='high')
 
 
 def notify_recent_incoming_call(items):
-    notify_call('Recent incoming call', items, priority='low')
+    notify_call('Recent incoming call', items)
 
 
 def _build_body_phone(cid_entry):
@@ -78,10 +78,8 @@ def _build_body_phone(cid_entry):
 
 
 def _build_body_name(cid_entry):
-    name = cid_entry.resolve_number()
-    if name:
-        return '<i>' + name + '</i>'
-    return ""
+    name = cid_entry.resolve_number() or ""
+    return '<i>' + name + '</i>'
 
 
 def _build_body_links(cid_entry):
