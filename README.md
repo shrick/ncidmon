@@ -22,12 +22,16 @@ Name or address and port of NCID server.
 *--listen*
 
 Listen for incoming calls. Can be used for running in background, e.g.
-automatically started in user session.
+automatically started in user session. Recent calls are shown on standard
+output, with notifications enabled also per on screen notification. A web-based
+call list is also provided, per default on http://localhost:8080.
 
 *--disable-notifications*
 
-Show no notifcations for recent call and incoming calls. To be used for
-interactive checks of recent calls.
+Show no notifcations for recent call and incoming calls. To be used for instant
+checks of recent calls. With notifications enabled recent and/or incoming call
+information are displayed per popup. The ammount of information depends on the
+capabilities of your local notification OSD server.
 
 *-d, --debug*
 
@@ -50,13 +54,12 @@ Show usage and exit.
 - [ ] limit log entries output on console by configurable time span
 - [ ] getopt command line parsing
 - [ ] restructure (file and folder hierarchy)
-- [ ] command line options for server address
-- [ ] connection timeout
-- [ ] handle connection failures (-> retries with final notification) even if not in listening mode
-- [ ] maybe two protocol implementations for simple request and continuous listening mode
+- [ ] command line options for NCID and HTTP server addresses
+- [ ] maybe two twisted protocol implementations for simple request and continuous listening mode
 - [ ] support wildcard numbers (corporate telephone system)
 - [ ] i18n using gettext
 - [ ] direct execution from zip file
 - [ ] config command line options (using arparse) overriding application defaults
 - [ ] workaround EasyBox day/month inversion
+- [ ] python setup infrastructure
 
