@@ -64,7 +64,11 @@ class NCIDClientFactory(ReconnectingClientFactory):
             ReconnectingClientFactory.clientConnectionLost(self, connector,
                 reason)
         else:
-            self.reactor.stop()
+            try:
+                self.reactor.stop()
+            except:
+                # ignore if no more running
+                pass
     
     
     def clientConnectionFailed(self, connector, reason):
@@ -86,6 +90,7 @@ class NCIDClient(LineReceiver):
         self._cid_entries = []
         self._log_dumped = False
         self._index_width = 1
+    
     
     def connectionMade(self):
         self._sendAnnouncing()
@@ -154,7 +159,7 @@ class NCIDClient(LineReceiver):
     def _handleCIDAndCIDLOG(self, line):
         '''collect CIDLOGs, notify CIDs,'''
         
-        if line.startswith('CID:') or line.startswith('CIDLOG:'):
+        if line.startswith(('CID:', 'CIDLOG:')):
             entry = CIDEntry(line)
             
             if entry.label == 'CIDLOG':
