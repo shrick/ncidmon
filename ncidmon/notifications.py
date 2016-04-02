@@ -10,6 +10,7 @@ pynotify = None  # to reduce dependencies if used as module
 recent_calls_link = False
 hyperlinks = None  # server body hyperlinks capability
 
+
 def enable_notifcations(enable, recent_calls=True):
     global pynotify
     global recent_calls_link
@@ -28,11 +29,11 @@ def enable_notifcations(enable, recent_calls=True):
                 # disable on errors
                 pynotify = None
             else:
-                hyperlinks = ('body-hyperlinks' in
-                    pynotify.get_server_caps())
+                hyperlinks = 'body-hyperlinks' in pynotify.get_server_caps()
                 
     elif pynotify:
         pynotify = False
+
 
 # Notification:
 # https://developer.gnome.org/notification-spec/

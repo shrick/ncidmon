@@ -133,7 +133,7 @@ class NCIDClient(LineReceiver):
     def _sendAnnouncing(self):
         dprint('broadcasting myself...')
         self._my_announcing = 'MSG: {0} client connected at {1}'.format(
-                CONFIG['NCID_CLIENT_NAME'], datetime.now())
+            CONFIG['NCID_CLIENT_NAME'], datetime.now())
         self.sendLine(self._my_announcing)
     
     

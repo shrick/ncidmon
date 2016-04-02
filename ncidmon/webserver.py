@@ -28,13 +28,13 @@ class CallListServer(resource.Resource):
             self._rendered_call_list = '<ol reversed>'
             
             for entry in reversed(
-                sorted(call_list, key=CIDEntry.get_sortable_key)):
+                    sorted(call_list, key=CIDEntry.get_sortable_key)):
                 number = entry.get_number()
                 pretty_number = entry.get_pretty_number()
                 if number.isdigit():
                     # we have a telephone number: make it clickable
                     tel = '<a href="tel://{0}">{1}</a>'.format(
-                            number, pretty_number)
+                        number, pretty_number)
                     caller = entry.resolve_number()
                     if caller is None:
                         # the caller is unknown: build lookup links
@@ -64,7 +64,7 @@ class CallListServer(resource.Resource):
         return PAGE_HEADER + self._rendered_call_list + PAGE_FOOTER
 
 
-PAGE_HEADER ='''<!DOCTYPE html>
+PAGE_HEADER = '''<!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8">

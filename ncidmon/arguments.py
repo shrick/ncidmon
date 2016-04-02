@@ -57,13 +57,13 @@ def process_commandline():
         help="listen for incoming calls",
         action="store_true")
     parser.add_argument(
-        'ncid',  metavar='<host>:<port>',
+        'ncid', metavar='<host>:<port>',
         help="host name or address and port number or service name of NCID server",
         nargs='?',
         default="{}:{}".format(CONFIG['NCID_HOST'], CONFIG['NCID_PORT']),
         action=HostPortParser)
     parser.add_argument(
-        '--http',  metavar='<host>:<port>',
+        '--http', metavar='<host>:<port>',
         help="host and port number to use for internal call list web server",
         default="{}:{}".format(CONFIG['HTTP_HOST'], CONFIG['HTTP_PORT']),
         action=HostPortParser)
