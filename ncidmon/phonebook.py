@@ -16,7 +16,7 @@ def resolve_number(number):
 
 def _get_normalized_phonebook(directory):
     # create identity table
-    all = maketrans('','')
+    all = maketrans('', '')
     
     # make translation table w/o digits
     no_digits = all.translate(all, digits)
@@ -24,8 +24,7 @@ def _get_normalized_phonebook(directory):
     # return re-built directory with normalized numbers
     return {
         key.translate(None, no_digits): value
-            for (key, value) in directory.items()
-    }
+        for (key, value) in directory.items()}
 
 
 # import mapping of numbers to names

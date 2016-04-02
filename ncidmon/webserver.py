@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-
 # apt-get twisted-twisted  or  apt-get python-twisted-core
 from twisted.web import resource
 
 # application
 from .cidentry import CIDEntry
-from .misc import dprint, CONFIG
+from .misc import CONFIG
+
 
 class CallListServer(resource.Resource):
     
@@ -28,29 +28,24 @@ class CallListServer(resource.Resource):
             self._rendered_call_list = '<ol reversed>'
             
             for entry in reversed(
-                sorted(call_list, key=CIDEntry.get_sortable_key)
-            ):
+                sorted(call_list, key=CIDEntry.get_sortable_key)):
                 number = entry.get_number()
                 pretty_number = entry.get_pretty_number()
                 if number.isdigit():
                     # we have a telephone number: make it clickable
                     tel = '<a href="tel://{0}">{1}</a>'.format(
-                            number,
-                            pretty_number,
-                        )
+                            number, pretty_number)
                     caller = entry.resolve_number()
                     if caller is None:
                         # the caller is unknown: build lookup links
                         caller = '&#10140;&nbsp;' + ', '.join(
-                                '<a href="{0}" target="_blank">{1}</a>'.format(
-                                    url.format(number=number), name
-                                )
-                                for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
-                            )
+                            '<a href="{0}" target="_blank">{1}</a>'.format(
+                                url.format(number=number), name)
+                            for name, url in CONFIG['NUMBER_LOOKUP_PAGES'])
                 else:
                     # no telephone number, unknown caller, lookup not possible
-                    tel = pretty_number # 'Anonymous' or similiar
-                    caller = '&mdash;'  # '---' or similiar
+                    tel = pretty_number  # 'Anonymous' or similiar
+                    caller = '&mdash;'   # '---' or similiar
                 
                 self._rendered_call_list += '''
                     <li>
@@ -59,20 +54,14 @@ class CallListServer(resource.Resource):
                         <p><date>{2}</date> <time>{3}</time></p>
                     </li>
                     '''.format(
-                        tel,
-                        caller,
-                        entry.get_pretty_date(), entry.get_pretty_time()
-                    )
+                        tel, caller, entry.get_pretty_date(),
+                        entry.get_pretty_time())
             
             self._rendered_call_list += '</ol>'
     
     
     def render_GET(self, request):
-        return (            
-            PAGE_HEADER
-            + self._rendered_call_list
-            + PAGE_FOOTER
-        )
+        return PAGE_HEADER + self._rendered_call_list + PAGE_FOOTER
 
 
 PAGE_HEADER ='''<!DOCTYPE html>

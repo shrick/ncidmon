@@ -28,8 +28,7 @@ class NCIDClientFactory(ReconnectingClientFactory):
     def startedConnecting(self, connector):
         dprint(
             "connecting to NCID server '{0.host}:{0.port}'...".format(
-                connector.getDestination()
-            )
+                connector.getDestination())
         )
     
     
@@ -61,8 +60,8 @@ class NCIDClientFactory(ReconnectingClientFactory):
         dprint('lost connection:', reason.getErrorMessage())
         
         if self._listen:
-            ReconnectingClientFactory.clientConnectionLost(self, connector,
-                reason)
+            ReconnectingClientFactory.clientConnectionLost(
+                self, connector, reason)
         else:
             try:
                 self.reactor.stop()
@@ -73,8 +72,8 @@ class NCIDClientFactory(ReconnectingClientFactory):
     
     def clientConnectionFailed(self, connector, reason):
         self._failures += 1
-        dprint('connection failed ({}): {}'.format(self._failures,
-            reason. getErrorMessage()))
+        dprint('connection failed ({}): {}'.format(
+            self._failures, reason. getErrorMessage()))
         
         if self._listen or self._failures < 4:
             ReconnectingClientFactory.clientConnectionFailed(
@@ -134,8 +133,7 @@ class NCIDClient(LineReceiver):
     def _sendAnnouncing(self):
         dprint('broadcasting myself...')
         self._my_announcing = 'MSG: {0} client connected at {1}'.format(
-                CONFIG['NCID_CLIENT_NAME'], datetime.now()
-            )
+                CONFIG['NCID_CLIENT_NAME'], datetime.now())
         self.sendLine(self._my_announcing)
     
     
@@ -168,8 +166,7 @@ class NCIDClient(LineReceiver):
                 
                 # update width of index
                 self._index_width = get_digits_count(
-                    len(self._cid_entries)
-                )
+                    len(self._cid_entries))
                 
                 return True
             
@@ -205,8 +202,7 @@ class NCIDClient(LineReceiver):
             
             # sort entries
             sorted_entries = sorted(
-                self._cid_entries, key=CIDEntry.get_sortable_key
-            )
+                self._cid_entries, key=CIDEntry.get_sortable_key)
             
             # limit output to recent calls, leaving original index intact
             recent_indexed_entries = [
@@ -225,8 +221,7 @@ class NCIDClient(LineReceiver):
 #            f = open('./cid.log', 'w+')
 #            for index, entry in recent_indexed_entries:
 #                print >> f, format_string.format(
-#                      index, entry.get_pretty_summary()
-#                   )
+#                      index, entry.get_pretty_summary())
             
             # notify most recent incoming call
             notify_recent_incoming_call(sorted_entries[-1])

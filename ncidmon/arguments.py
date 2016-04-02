@@ -16,7 +16,7 @@ class HostPortParser(argparse.Action):
             host, port = map(str.strip, value.split(':'))
         except ValueError as e:
             parser.error("invalid {} argument '{}': {}".format(
-                self.metavar or self.dest, value, e))
+                         self.metavar or self.dest, value, e))
         args.__delattr__(self.dest)
         
         if host:
@@ -34,7 +34,9 @@ class HostPortParser(argparse.Action):
                     import socket
                     port = socket.getservbyname(port, 'tcp')
                 except socket.error as e:
-                    parser.error("invalid port service name '{}': {}".format(port, e))
+                    parser.error(
+                        "invalid port service name '{}': {}".format(
+                            port, e))
             
             args.__setattr__(self.dest + '_port', port)
 
@@ -42,21 +44,26 @@ class HostPortParser(argparse.Action):
 def process_commandline():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('-d', '--debug',
+    parser.add_argument(
+        '-d', '--debug',
         help="print debug information",
         action="store_true")
-    parser.add_argument('--disable-notifications',
+    parser.add_argument(
+        '--disable-notifications',
         help="disable call notifications",
         action="store_true")
-    parser.add_argument('--listen',
+    parser.add_argument(
+        '--listen',
         help="listen for incoming calls",
         action="store_true")
-    parser.add_argument('ncid',  metavar='<host>:<port>',
+    parser.add_argument(
+        'ncid',  metavar='<host>:<port>',
         help="host name or address and port number or service name of NCID server",
         nargs='?',
         default="{}:{}".format(CONFIG['NCID_HOST'], CONFIG['NCID_PORT']),
         action=HostPortParser)
-    parser.add_argument('--http',  metavar='<host>:<port>',
+    parser.add_argument(
+        '--http',  metavar='<host>:<port>',
         help="host and port number to use for internal call list web server",
         default="{}:{}".format(CONFIG['HTTP_HOST'], CONFIG['HTTP_PORT']),
         action=HostPortParser)
@@ -64,5 +71,5 @@ def process_commandline():
     args = parser.parse_args()
     
     # update configuration
-    CONFIG.update({
-        name.upper(): value for name, value in vars(args).items() })
+    CONFIG.update(
+        {name.upper(): value for name, value in vars(args).items()})

@@ -33,5 +33,5 @@ def dprint(*args):
         print '[DEBUG]', ' '.join(str(a) for a in args)
 
 
-def get_digits_count(value):    
+def get_digits_count(value):
     return int(floor(log10(abs(int(value)))) + 1)

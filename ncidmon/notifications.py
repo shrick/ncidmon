@@ -6,9 +6,9 @@ from .misc import CONFIG
 
 # apt-get python-notify2  or  --disable-notifications
 
-pynotify = None # to reduce dependencies if used as module
+pynotify = None  # to reduce dependencies if used as module
 recent_calls_link = False
-hyperlinks = None # server body hyperlinks capability
+hyperlinks = None  # server body hyperlinks capability
 
 def enable_notifcations(enable, recent_calls=True):
     global pynotify
@@ -28,7 +28,8 @@ def enable_notifcations(enable, recent_calls=True):
                 # disable on errors
                 pynotify = None
             else:
-                hyperlinks = 'body-hyperlinks' in pynotify.get_server_caps()
+                hyperlinks = ('body-hyperlinks' in
+                    pynotify.get_server_caps())
                 
     elif pynotify:
         pynotify = False
@@ -55,7 +56,7 @@ def notify_call(title, cid_entry, priority=None, expires=None):
     
     # create notification
     message = pynotify.Notification(
-        title, body, CONFIG['NOTIFICATION_ICON'] 
+        title, body, CONFIG['NOTIFICATION_ICON']
     )
     
     # set notification properties
@@ -85,25 +86,23 @@ def _build_body_name(cid_entry):
 def _build_body_links(cid_entry):
     links = ""
     
-    if hyperlinks:    
+    if hyperlinks:
         number = cid_entry.get_number()
         if number.isdigit():
             links += '\n' + '\n'.join(
-                '<a href="{0}">{1}</a>'.format(url.format(number=number), name)
-                    for name, url in CONFIG['NUMBER_LOOKUP_PAGES']
-            ) + links
+                '<a href="{0}">{1}</a>'.format(
+                    url.format(number=number), name)
+                for name, url in CONFIG['NUMBER_LOOKUP_PAGES']) + links
         
         if recent_calls_link:
             links += '\n\n' + '<a href="{0}:{1}">All recent calls...</a>'.format(
-                "http://localhost",
-                CONFIG['HTTP_PORT']
-            )
+                "http://localhost", CONFIG['HTTP_PORT'])
     
     return links
 
 
 def _set_message_properties(message, priority, expires):
-    message.set_category('im.received') # in favour of a more specific category
+    message.set_category('im.received')  # in favour of a more specific category
     
     message.set_urgency({
         'low':      pynotify.URGENCY_LOW,
