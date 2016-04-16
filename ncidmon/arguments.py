@@ -53,7 +53,7 @@ def process_commandline():
         help="disable call notifications",
         action="store_true")
     parser.add_argument(
-        '--listen',
+        '-l', '--listen',
         help="listen for incoming calls",
         action="store_true")
     parser.add_argument(

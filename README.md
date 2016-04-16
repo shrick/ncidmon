@@ -24,7 +24,7 @@ Name or address and port or service name of NCID server.
 Listen for incoming calls. Can be used for running in background, e.g.
 automatically started in user session. Recent calls are shown on standard
 output, with notifications enabled also per on screen notification.
-A web-based call list is also provided, per default on [http://localhost:8080.](http://localhost:8080).
+A web-based call list is also provided, per default on [http://localhost:8080](http://localhost:8080).
 
     --http <host>:<port>
     

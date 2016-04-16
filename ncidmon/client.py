@@ -201,8 +201,7 @@ class NCIDClient(LineReceiver):
             self._updateCallListServer()
             
             # sort entries
-            sorted_entries = sorted(
-                self._cid_entries, key=CIDEntry.get_sortable_key)
+            sorted_entries = sorted(self._cid_entries)
             
             # limit output to recent calls, leaving original index intact
             recent_indexed_entries = [

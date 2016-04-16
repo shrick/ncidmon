@@ -3,11 +3,12 @@
 
 # system
 from datetime import datetime
+from functools import total_ordering
 
 # application
 from .phonebook import resolve_number as resolve_phonebook_number
 
-
+@total_ordering
 class CIDEntry(object):
     
     def __init__(self, line):
@@ -22,15 +23,23 @@ class CIDEntry(object):
             self._items['TIME'][2:4])
     
     
-    @property
-    def label(self):
-        return self._label
-    
-    
-    def get_sortable_key(self):
+    def _get_sortable_key(self):
         return datetime.strptime(
             '{DATE} {TIME}'.format(**self._items), '%m%d%Y %H%M'
         ).strftime('%Y-%m-%d %H:%M')
+    
+    
+    def __eq__(self, other):
+        return self._get_sortable_key() == other._get_sortable_key()
+    
+    
+    def __lt__(self, other):
+        return self._get_sortable_key() < other._get_sortable_key()
+    
+    
+    @property
+    def label(self):
+        return self._label
     
     
     def get_number(self):

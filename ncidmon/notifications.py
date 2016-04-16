@@ -106,13 +106,13 @@ def _set_message_properties(message, priority, expires):
     message.set_category('im.received')  # in favour of a more specific category
     
     message.set_urgency({
-        'low':      pynotify.URGENCY_LOW,
-        'default':  pynotify.URGENCY_NORMAL,
-        'high':     pynotify.URGENCY_CRITICAL,
+        'low'       : pynotify.URGENCY_LOW,
+        'default'   : pynotify.URGENCY_NORMAL,
+        'high'      : pynotify.URGENCY_CRITICAL,
     }.get(priority, pynotify.URGENCY_NORMAL))
     
     message.set_timeout({
-        'default':  pynotify.EXPIRES_DEFAULT,
-        'never':    pynotify.EXPIRES_NEVER,
+        'default'   : pynotify.EXPIRES_DEFAULT,
+        'never'     : pynotify.EXPIRES_NEVER,
     }.get(expires, pynotify.EXPIRES_DEFAULT))
 

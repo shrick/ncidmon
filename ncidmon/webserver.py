@@ -28,12 +28,12 @@ class CallListServer(resource.Resource):
             self._rendered_call_list = '<ol reversed>'
             
             for entry in reversed(
-                    sorted(call_list, key=CIDEntry.get_sortable_key)):
+                    sorted(call_list)):
                 number = entry.get_number()
                 pretty_number = entry.get_pretty_number()
                 if number.isdigit():
                     # we have a telephone number: make it clickable
-                    tel = '<a href="tel://{0}">{1}</a>'.format(
+                    tel = '<a href="tel:{0}">{1}</a>'.format(
                         number, pretty_number)
                     caller = entry.resolve_number()
                     if caller is None:
@@ -54,8 +54,8 @@ class CallListServer(resource.Resource):
                         <p><date>{2}</date> <time>{3}</time></p>
                     </li>
                     '''.format(
-                        tel, caller, entry.get_pretty_date(),
-                        entry.get_pretty_time())
+                    tel, caller, entry.get_pretty_date(),
+                    entry.get_pretty_time())
             
             self._rendered_call_list += '</ol>'
     

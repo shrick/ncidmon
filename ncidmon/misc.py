@@ -15,8 +15,8 @@ CONFIG = {
     'NCID_CLIENT_NAME'      : 'NCIDmon',       # name of this client for broadcasts
     'NOTIFICATION_ICON'     : r'phone',        # name of icon in notification windows
     'NUMBER_LOOKUP_PAGES'   : (                # (name, url) tuples for number lookup
-        # replace search number in lookup URL by '{number}' 
-        (r'Das Örtliche', r'http://mobil.dasoertliche.de/search?what={number}'),
+        # replace search number in lookup URL by '{number}'
+        (r'Das Örtliche', r'http://mobil.dasoertliche.de/Themen?nummer={number}'),
         (r'Klicktel', r'http://www.klicktel.de/rueckwaertssuche/{number}'),
     ),
     'MAX_LOG_OUTPUT'        : 10,               # recent log entries count to output
